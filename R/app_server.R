@@ -31,46 +31,33 @@ app_server <- function(input, output, session) {
   # this keeps track of the RADq dataframe that is returned from RADalign
   RADq <- reactiveVal(NULL)
 
+  loaded <- reactiveVal(FALSE)
+
   # this puts the genus list into the drop down menu on the taxa select screen
   observeEvent(screen(), {
     req(screen() == "menu")
 
-    session$onFlushed(function() {
-      updateSelectizeInput(session, "selectGenus", selected = "", choices = genus, server = TRUE)
-    }, once = TRUE)
+    shinyjs::disable("entireGenus")
+    updateCheckboxInput(session, "entireGenus", value = FALSE)
+
+    if (is.null(selected_taxa())) {
+      session$onFlushed(function() {
+        updateSelectizeInput(session, "selectGenus", selected = "", choices = genus, server = TRUE)
+      }, once = TRUE)
+    }
   })
 
   # this puts the filtered species list into the drop down menu after the genus/genera are selected
-  observeEvent(input$selectGenus, {
-    req(screen() == "menu")
-    req(input$selectGenus)
-
-    selected_genera <- input$selectGenus
-
-    line_genus <- sub("\\s.*$", "", genus_species)
-    sp <- genus_species[line_genus %in% selected_genera]
-
-    if (is.null(selected_taxa())) {
-      updateSelectizeInput(
-        session,
-        "selectTaxa",
-        choices = sp,
-        selected = character(0),
-        server = TRUE
-      )
-    }
-
-  })
-
   # this is just a section that changes wording on the taxa select page based on how many genera / species you've selected
   # simply for aesthetics
   observeEvent(input$selectGenus, {
     req(screen() == "menu")
 
-    selected_genera <- input$selectGenus
-    n_genera <- if (is.null(selected_genera)) 0 else length(selected_genera)
+    selected_genera(input$selectGenus)
+    selected_genera_local <- input$selectGenus
+    n_genera <- if (is.null(selected_genera_local)) 0 else length(selected_genera_local)
 
-    if (length(selected_genera) == 0) {
+    if (length(selected_genera_local) == 0) {
       updateCheckboxInput(
         session,
         "entireGenus",
@@ -78,12 +65,40 @@ app_server <- function(input, output, session) {
         value = FALSE
       )
       shinyjs::disable("entireGenus")
+
+      updateSelectizeInput(
+        session,
+        "selectTaxa",
+        choices = character(0),
+        selected = character(0),
+        server = TRUE
+      )
       return()
     }
 
     line_genus <- sub("\\s.*$", "", genus_species)
-    sp <- genus_species[line_genus %in% selected_genera]
+    sp <- genus_species[line_genus %in% selected_genera_local]
     n_members <- length(unique(sp))
+
+    # if we are coming back to menu and want to restore previous selections
+    if (isTRUE(loaded())) {
+      updateSelectizeInput(
+        session,
+        "selectTaxa",
+        choices = unique(sp),
+        selected = if (is.null(selected_taxa())) character(0) else selected_taxa(),
+        server = TRUE
+      )
+      loaded(FALSE)
+    } else {
+      updateSelectizeInput(
+        session,
+        "selectTaxa",
+        choices = unique(sp),
+        selected = character(0),
+        server = TRUE
+      )
+    }
 
     genus_word <- if (n_genera == 1) "genus" else "genera"
     label <- if (n_members == 1) {
@@ -106,13 +121,7 @@ app_server <- function(input, output, session) {
     } else {
       shinyjs::enable("entireGenus")
     }
-
   }, ignoreInit = TRUE)
-
-  observeEvent(screen(), {
-    shinyjs::disable("entireGenus")
-    updateCheckboxInput(session, "entireGenus", value = FALSE)
-  }, ignoreInit = FALSE)
 
   # selected number of species note under the speciesSelection checkbox
   output$speciesNote <- renderUI({
@@ -128,51 +137,35 @@ app_server <- function(input, output, session) {
     ))
   })
 
+  observeEvent(input$selectTaxa, {
+    selected_taxa(input$selectTaxa)
+  }, ignoreInit = TRUE)
+
   # this actually puts all of the species options into the species selectize so radexplorer can keep track of the selected species
   observeEvent(input$entireGenus, {
+    req(screen() == "menu")
+    req(input$selectGenus)
 
-    print(selected_genera())
-    print(is.null(selected_genera()))
-    if (is.null(selected_genera()) && is.null(selected_taxa())) {
-      selected_genera <- input$selectGenus
-      line_genus <- sub("\\s.*$", "", genus_species)
-      sp <- genus_species[line_genus %in% selected_genera]
+    line_genus <- sub("\\s.*$", "", genus_species)
+    sp <- genus_species[line_genus %in% input$selectGenus]
 
-      if (isTRUE(input$entireGenus)) {
-        updateSelectizeInput(
-          session,
-          "selectTaxa",
-          selected = sp,
-          choices = unique(sp),
-          server = TRUE
-        )
-      } else {
-        updateSelectizeInput(
-          session,
-          "selectTaxa",
-          selected = character(0),
-          choices = unique(sp),
-          server = TRUE
-        )
-      }
-    } else {
-      updateSelectizeInput(
-        session,
-        "selectGenus",
-        selected = selected_genera(),
-        choices = unique(selected_genera()),
-        server = TRUE
-      )
+    if (isTRUE(input$entireGenus)) {
       updateSelectizeInput(
         session,
         "selectTaxa",
-        selected = selected_taxa(),
-        choices = unique(selected_taxa()),
+        selected = sp,
+        choices = unique(sp),
         server = TRUE
       )
-
+    } else {
+      updateSelectizeInput(
+        session,
+        "selectTaxa",
+        selected = character(0),
+        choices = unique(sp),
+        server = TRUE
+      )
     }
-
   })
 
   # this activates the explore + download buttons on the menu page when the user has selected the taxa of interest
@@ -189,9 +182,11 @@ app_server <- function(input, output, session) {
     selected_genera(input$selectGenus)
     selected_taxa(input$selectTaxa)
 
+    print(selected_taxa())
     ########## THIS IS WHERE WE SEND THE SELECTED TAXA TO RADALIGN AND RECIEVE RADq ############
-    #RADq(RADalign::getSequences(selected_taxa())
+    #RADq(RADalign::createRADq(selected_taxa(), TRUE))
     ##########                                                                      ############
+    #print(utils::head(RADq()))
 
     screen("radx")
   })
@@ -265,7 +260,7 @@ app_server <- function(input, output, session) {
             id = "taxaCard",
             style = "width: min(1100px, 80vw); max-height: 250vh; overflow: visible;",
             card_body(
-              style = "display:flex; flex-direction:column; gap:16px; overflow:auto;",
+              style = "display:flex; flex-direction:column; gap:16px;",
               div(
                 style = "display:flex; gap:12px; width:100%;",
                 h4("RADexplorer", style = "margin:0;")
@@ -309,8 +304,9 @@ app_server <- function(input, output, session) {
                     ),
                     selectizeInput(
                       "selectGenus", label = NULL,
-                      choices = NULL, multiple = TRUE,
-                      options = list(placeholder = "Type to search", maxOptions = 10000),
+                      choices = genus,
+                      multiple = TRUE,
+                      options = list(placeholder = "Type to search", maxOptions = 10000, openOnFocus = FALSE),
                       width = "100%"
                     )
                   ),
@@ -319,11 +315,13 @@ app_server <- function(input, output, session) {
                     condition = "input.selectGenus && input.selectGenus.length > 0",
                     selectizeInput(
                       "selectTaxa", "Select species to analyze:",
-                      choices = NULL, multiple = TRUE,
+                      choices = character(0),
+                      multiple = TRUE,
                       options = list(
                         placeholder = "Type to search",
                         maxOptions = 10000,
-                        closeAfterSelect = FALSE
+                        closeAfterSelect = FALSE,
+                        openOnFocus = FALSE
                       ),
                       width = "100%"
                     ),
@@ -357,7 +355,7 @@ app_server <- function(input, output, session) {
             id = "taxaCard",
             style = "width: min(1100px, 80vw); max-height: 250vh; overflow: visible;",
             card_body(
-              style = "display:flex; flex-direction:column; gap:16px; overflow:auto;",
+              style = "display:flex; flex-direction:column; gap:16px; overflow: visible;",
               div(
                 style = "display:flex; gap:12px; width:100%;",
                 h4("RADport", style = "margin:0;"),
@@ -384,7 +382,6 @@ app_server <- function(input, output, session) {
     }
   })
 
-
   msa_plot <- eventReactive(list(input$continueWithTaxa, input$varRegions, input$detailedView, input$uniqueRegions), {
     make_msa_plotly(
       taxon = selected_taxa(),
@@ -398,5 +395,4 @@ app_server <- function(input, output, session) {
   output$visual <- renderPlotly({
     msa_plot()
   })
-
 }
