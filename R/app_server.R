@@ -30,8 +30,10 @@ app_server <- function(input, output, session) {
 
   # this keeps track of the RADq dataframe that is returned from RADalign
   RADq <- reactiveVal(NULL)
-
   loaded <- reactiveVal(FALSE)
+
+  # selected download pipeline
+  download_pipeline <- reactiveVal(NULL)
 
   # this puts the genus list into the drop down menu on the taxa select screen
   observeEvent(screen(), {
@@ -191,12 +193,6 @@ app_server <- function(input, output, session) {
     screen("radx")
   })
 
-  # this takes the user to radport
-  observeEvent(input$download, {
-    selected_genera(input$selectGenus)
-    selected_taxa(input$selectTaxa)
-    screen("RADport")
-  })
 
   # this sets the selected_vregions variable with the users selections
   observeEvent(input$varRegions, {
@@ -207,10 +203,39 @@ app_server <- function(input, output, session) {
     ##########                                                                      ############
   })
 
+
   # this is the event that takes the user back to the main menu
   observeEvent(input$backToMenu, {
     screen("menu")
   })
+
+
+  # this takes the user to radport
+  observeEvent(input$download, {
+    selected_genera(input$selectGenus)
+    selected_taxa(input$selectTaxa)
+    screen("RADport")
+  })
+
+  # if user selects metascope on download screen
+  observeEvent(input$continueMetascope, {
+    download_pipeline("metascope")
+    screen("metascope")
+  })
+
+  observeEvent(input$port, {
+    ########## THIS IS WHERE WE DOWNLOAD THE FILES FOR PORTING TO OTHER PIPELINES ############
+    if (download_pipeline() == "metascope") {
+      #RADdownload::download_RAD_data("metascope", selected_species, metascope_filter_list))
+    } else if (download_pipeline() == "kraken") {
+
+    } else if (download_pipeline() == "qiime2") {
+
+    }
+    ##########                                                                    ############
+  })
+
+
 
   # this is the meat of the screen rendering
   # it selects the screen that the user is seeing based on the variable above and renders it accordingly
@@ -378,7 +403,35 @@ app_server <- function(input, output, session) {
           )
         )
       )
-
+    } else if (screen() == "metascope") {
+      # Metascope download menu
+      page_fillable(
+        title = "RADport to Metascope",
+        div(
+          style = "display:flex; align-items:flex-start; justify-content:center; padding-top:100px; padding-bottom:100px;",
+          card(
+            id = "taxaCard",
+            style = "width: min(1100px, 80vw); max-height: 250vh; overflow: visible;",
+            card_body(
+              style = "display:flex; flex-direction:column; gap:16px; overflow: visible;",
+              div(
+                style = "display:flex; gap:12px; width:100%;",
+                h4("RADport", style = "margin:0;"),
+                actionButton("backToMenu", "Back", style = "margin-left:auto;")
+              )
+            ),
+            card(
+              fluidPage(
+                useShinyjs(),
+                div(
+                  style = "display:flex; gap:12px; width:100%;",
+                  actionButton("port", "Download", style = "flex:1;")
+                )
+              )
+            )
+          )
+        )
+      )
     }
   })
 
