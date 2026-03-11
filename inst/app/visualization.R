@@ -25,8 +25,7 @@ make_msa_plotly <- function(
   groups <- readr::read_csv(groupings_path, show_col_types = FALSE)
 
   # user selected variable regions
-  selectedVariableRegions <- varRegions
-  selected_regions_clean <- sub("regions$", "", selectedVariableRegions)
+  selected_regions_clean <- sub("regions$", "", varRegions)
 
   #####################################################################################
   # detailed mode data prep (RADq tiles)
@@ -41,9 +40,6 @@ make_msa_plotly <- function(
       seq_id
     ) %>%
     filter(!is.na(copy_num), !is.na(seq_id))
-
-  #groups <- groups %>%
-  #  filter(vregion %in% selected_regions_clean)
 
   #####################################################################################
   # stack gene copies within each species, with gaps between species
@@ -70,7 +66,6 @@ make_msa_plotly <- function(
 
   RADqtiles <- RADqtiles %>%
     mutate(
-      x_one   = 1,
       species = factor(species, levels = species_levels)
     ) %>%
     left_join(copies_tbl %>% select(species, start), by = "species") %>%
@@ -86,7 +81,6 @@ make_msa_plotly <- function(
 
   # default: nothing is unique, no rectangles
   RADqtiles <- RADqtiles %>% mutate(is_unique_block = FALSE)
-  rect_df <- tibble()
 
   if (highlight_unique) {
 
@@ -141,7 +135,6 @@ make_msa_plotly <- function(
 
   vr_levels_all <- paste0("V", 1:9)
   selected_vr <- selected_regions_clean
-  unselected_vr <- setdiff(vr_levels_all, selected_vr)
 
 
   # base ggplot
@@ -155,14 +148,7 @@ make_msa_plotly <- function(
     n_vr <- length(vr_levels)
 
     tile_w <- 0.7
-    bracket_x <- 1 - tile_w/2 - 0.20
-    brackets_one <- copies_tbl %>%
-      transmute(
-        ymin = start,
-        ymax = end,
-        x    = bracket_x,
-        tick = 0.05
-      )
+    backbone_pad <- 0.45
 
     RADqtiles_nonunique <- RADqtiles_nonunique %>%
       mutate(vx = match(variable_region_clean, vr_levels))
@@ -170,36 +156,19 @@ make_msa_plotly <- function(
     RADqtiles_unique <- RADqtiles_unique %>%
       mutate(vx = match(variable_region_clean, vr_levels))
 
-    # gray line segments between adjacent regions for each species block
-    seg_df <- tidyr::expand_grid(
-      y = y_breaks$y_lab,
-      i = seq_len(n_vr - 1)
-    ) %>%
-      transmute(y, x = i + tile_w/2, xend = i + 1 - tile_w/2)
-
-    # gray caps extending left of first region and right of last region
-    cap_df <- tidyr::expand_grid(
-      y = y_breaks$y_lab,
-      side = c("L", "R")
-    ) %>%
-      transmute(
-        y,
-        x    = ifelse(side == "L", 0.5, n_vr + tile_w/2),
-        xend = ifelse(side == "L", 1 - tile_w/2, n_vr + 0.5)
-      )
-
-    seg_df <- bind_rows(seg_df, cap_df)
+    detailed_backbone_df <- RADqtiles %>%
+      distinct(species, y)
 
     # backbone
     p_msa <- p_msa +
       geom_tile(
-        data = tibble(y = y_breaks$y_lab),
+        data = detailed_backbone_df,
         aes(x = (n_vr + 1) / 2, y = y),
         inherit.aes = FALSE,
         fill = "grey80",
         color = NA,
-        width = n_vr,
-        height = 0.55
+        width = n_vr + 2 * backbone_pad,
+        height = 0.20
       )
 
     # add the tiles that are non unique (if they exist)
@@ -209,7 +178,7 @@ make_msa_plotly <- function(
           data = RADqtiles_nonunique,
           aes(x = vx, y = y, fill = seq_id_local, text = hover_text),
           alpha = alpha_nonunique,
-          color = "black", width = tile_w, height = 0.95,
+          color = "black", width = tile_w, height = 0.65,
           linewidth = 0.35
         )
     }
@@ -221,7 +190,7 @@ make_msa_plotly <- function(
           data = RADqtiles_unique,
           aes(x = vx, y = y, fill = seq_id_local, text = hover_text),
           alpha = 1,
-          color = "black", width = tile_w, height = 0.95,
+          color = "black", width = tile_w, height = 0.65,
           linewidth = 0.35
         )
     }
@@ -232,14 +201,14 @@ make_msa_plotly <- function(
         breaks = seq_len(n_vr),
         labels = vr_levels,
         position = "top",
-        limits = c(0.3, n_vr + 0.5),
+        limits = c(0.3 - backbone_pad, n_vr + 0.5 + backbone_pad),
         expand = c(0, 0)
       ) +
       scale_y_continuous(
         breaks = y_breaks$y_lab,
         labels = paste0(
-          "<span style='font-size:10pt; line-height:1.1; font-weight:500;'>", y_breaks$species, "</span>",
-          "<br><span style='font-size:6pt; line-height:1.1;'>", y_breaks$n_copies, " 16S gene copies</span>"
+          "<span style='font-size:10pt; line-height:1.1; font-weight:750;'>", y_breaks$species, "</span>",
+          "<br><span style='font-size:8pt; line-height:1.1;'>", y_breaks$n_copies, " 16S gene copies</span>"
         ),
         trans = "reverse"
       ) +
@@ -247,7 +216,7 @@ make_msa_plotly <- function(
       theme_minimal() +
       theme(
         legend.position = "none",
-        axis.text.y = ggtext::element_markdown(),
+        axis.text.y = ggtext::element_markdown(margin = margin(r = 10)),
         strip.text = element_text(size = 12)
       )
 
@@ -267,18 +236,6 @@ make_msa_plotly <- function(
 
     n_vr <- length(vr_levels_all)
     tile_w <- 0.7
-
-    seg_df <- expand_grid(y = y_map$y, i = seq_len(n_vr - 1)) %>%
-      transmute(y, x = i + tile_w/2, xend = i + 1 - tile_w/2)
-
-    cap_df <- expand_grid(y = y_map$y, side = c("L", "R")) %>%
-      transmute(
-        y,
-        x    = ifelse(side == "L", 0.5, n_vr + tile_w/2),
-        xend = ifelse(side == "L", 1 - tile_w/2, n_vr + 0.5)
-      )
-
-    seg_df <- bind_rows(seg_df, cap_df)
 
     p_msa <- ggplot() +
       # backbone
@@ -333,15 +290,3 @@ make_msa_plotly <- function(
 
   p_plotly
 }
-
-
-
-
-
-
-#make_msa_plotly()
-
-
-
-
-
