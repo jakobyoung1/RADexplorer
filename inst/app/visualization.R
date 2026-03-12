@@ -178,7 +178,7 @@ make_msa_plotly <- function(
           data = RADqtiles_nonunique,
           aes(x = vx, y = y, fill = seq_id_local, text = hover_text),
           alpha = alpha_nonunique,
-          color = "black", width = tile_w, height = 0.65,
+          color = "black", width = tile_w, height = 0.75,
           linewidth = 0.35
         )
     }
@@ -190,7 +190,7 @@ make_msa_plotly <- function(
           data = RADqtiles_unique,
           aes(x = vx, y = y, fill = seq_id_local, text = hover_text),
           alpha = 1,
-          color = "black", width = tile_w, height = 0.65,
+          color = "black", width = tile_w, height = 0.75,
           linewidth = 0.35
         )
     }

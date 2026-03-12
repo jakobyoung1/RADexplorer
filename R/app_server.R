@@ -34,7 +34,6 @@ app_server <- function(input, output, session) {
 
   # selected download pipeline
   download_pipeline <- reactiveVal(NULL)
-  selected_taxa_metascope_filter <- reactiveVal(NULL)
 
   # this puts the genus list into the drop down menu on the taxa select screen
   observeEvent(screen(), {
@@ -81,25 +80,15 @@ app_server <- function(input, output, session) {
     sp <- genus_species[line_genus %in% selected_genera_local]
     n_members <- length(unique(sp))
 
-    # if we are coming back to menu and want to restore previous selections
-    if (isTRUE(loaded())) {
-      updateSelectizeInput(
-        session,
-        "selectTaxa",
-        choices = unique(sp),
-        selected = if (is.null(selected_taxa())) character(0) else selected_taxa(),
-        server = TRUE
-      )
-      loaded(FALSE)
-    } else {
-      updateSelectizeInput(
-        session,
-        "selectTaxa",
-        choices = unique(sp),
-        selected = character(0),
-        server = TRUE
-      )
-    }
+
+    updateSelectizeInput(
+      session,
+      "selectTaxa",
+      choices = unique(sp),
+      selected = character(0),
+      server = TRUE
+    )
+
 
     genus_word <- if (n_genera == 1) "genus" else "genera"
     label <- if (n_members == 1) {
@@ -229,7 +218,11 @@ app_server <- function(input, output, session) {
   observeEvent(input$port, {
     ########## THIS IS WHERE WE DOWNLOAD THE FILES FOR PORTING TO OTHER PIPELINES ############
     if (download_pipeline() == "metascope") {
-      #RADalign::download_RAD_data("MetaScope", selected_taxa())
+      if (length(input$selectTaxaFilter) != 0) {
+        RADalign::download_RAD_data("MetaScope", selected_taxa(), input$selectTaxaFilter())
+      } else {
+        RADalign::download_RAD_data("MetaScope", selected_taxa())
+      }
     } else if (download_pipeline() == "kraken") {
 
     } else if (download_pipeline() == "qiime2") {

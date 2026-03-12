@@ -17,25 +17,21 @@ metascope_screen_ui <- function(genus, species) {
         ),
         card(
           div(
-            style = "display:flex; flex-direction:column; gap:0px;",
-            checkboxInput(
-              "metascopeFilter",
-              label = HTML("Create Metascope filter files"),
-              value = FALSE
-            ),
+            h4("To create MetaScope filters, select taxa below."),
+            p("If no filters are needed, leave the selection blank."),
             # genus selection
             tags$div(
               tags$label(
                 `for` = "selectGenus",
                 style = "display:block; margin-bottom:0px;",
-                tags$div("Select genus or genera to analyze:"),
+                tags$div("Select genus or genera to filter:"),
                 tags$div(
                   style = "font-size:13px; margin-top:0px;",
                   class = "checkbox",
                   tags$label(
                     checkboxInput(
                       "entireGenus",
-                      label = HTML("<i>Analyze all members of the selected genus</i>"),
+                      label = HTML("<i>Filter all members of the selected genus</i>"),
                       value = FALSE
                     )
                   )
@@ -53,7 +49,7 @@ metascope_screen_ui <- function(genus, species) {
             conditionalPanel(
               condition = "input.selectGenusFilter && input.selectGenusFilter.length > 0",
               selectizeInput(
-                "selectTaxaFilter", "Select species to analyze:",
+                "selectTaxaFilter", "Select species to filter:",
                 choices = character(0),
                 multiple = TRUE,
                 options = list(
