@@ -15,6 +15,11 @@ radx_screen_ui <- function() {
         label = "Detailed View",
         value = TRUE
       ),
+      input_switch(
+        "vregionIDs",
+        label = "Display V-Region IDs",
+        value = FALSE
+      ),
       div(
         style = "display:flex; gap:10px; width:100%;",
         actionButton("backToMenu", "Back", style = "flex:1;")

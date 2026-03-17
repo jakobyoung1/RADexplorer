@@ -28,10 +28,12 @@ app_server <- function(input, output, session) {
 
   # this keeps track of the user's selected variable regions
   selected_vregions <- reactiveVal(c("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9"))
+  vregionIDs = reactiveVal(FALSE)
 
   # this keeps track of the RADq dataframe that is returned from RADalign
   RADq <- reactiveVal(NULL)
   uniqueRADq <- reactiveVal(NULL)
+  RADqGroups <- reactiveVal(NULL)
   loaded <- reactiveVal(FALSE)
 
   # selected download pipeline
@@ -272,10 +274,12 @@ app_server <- function(input, output, session) {
     ########## THIS IS WHERE WE SEND THE SELECTED TAXA TO RADALIGN AND RECIEVE RADq ############
     RADq(RADalign::createRADq(selected_taxa(), TRUE))
     uniqueRADq(RADalign::createSummarizedIDs(TRUE))
+    RADqGroups(RADalign::createRADqGroups(selected_vregions(), TRUE))
     ##########                                                                      ############
-    print(utils::head(RADq()))
-    print(class(uniqueRADq()))
-    print(uniqueRADq())
+    #print(utils::head(RADq()))
+    #print(class(uniqueRADq()))
+    #print(uniqueRADq())
+    print(RADqGroups())
 
     screen("radx")
   })
@@ -283,6 +287,9 @@ app_server <- function(input, output, session) {
   # this sets the selected_vregions variable with the users selections
   observeEvent(input$varRegions, {
     selected_vregions(input$varRegions)
+    RADqGroups(RADalign::createRADqGroups(selected_vregions(), TRUE))
+    print(RADqGroups())
+
 
     ########## THIS IS WHERE WE SEND THE SELECTED TAXA TO RADALIGN AND RECIEVE RADq ############
     #RADq(RADalign::selectVRegions(selected_vregions(), TRUE))
@@ -403,12 +410,14 @@ app_server <- function(input, output, session) {
   #########################################################################
   # plot rendering
 
-  msa_plot <- eventReactive(list(input$continueWithTaxa, input$varRegions, input$detailedView), {
+  msa_plot <- eventReactive(list(input$continueWithTaxa, input$varRegions, input$detailedView, input$vregionIDs), {
     make_msa_plotly(
       RADq = RADq(),
       unique = uniqueRADq(),
+      groups = RADqGroups(),
       varRegions = selected_vregions(),
-      detailed = input$detailedView
+      detailed = input$detailedView,
+      vregionIDs = input$vregionIDs
     )
   })
 

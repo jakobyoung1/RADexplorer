@@ -1,10 +1,11 @@
 make_msa_plotly <- function(
     RADq,
     unique,
+    groups,
     varRegions = c("V1","V2","V3","V4","V5","V6","V7","V8","V9"),
-    groupings_path = NULL,
     highlight_unique = FALSE,
     detailed = TRUE,
+    vregionIDs = FALSE,
     package = "RADexplorer"
 ) {
 
@@ -157,7 +158,22 @@ make_msa_plotly <- function(
         width = tile_w,
         height = 0.75,
         linewidth = 0.35
-      ) +
+      )
+
+    # add variable region ID labels on top of each tile only if requested
+    if (isTRUE(vregionIDs)) {
+      p_msa <- p_msa +
+        geom_text(
+          data = RADqtiles,
+          aes(x = vx, y = y + 0.08, label = as.character(seq_id_local)),
+          inherit.aes = FALSE,
+          color = "white",
+          size = 2.5,
+          fontface = "bold"
+        )
+    }
+
+    p_msa <- p_msa +
       scale_x_continuous(
         breaks = seq_len(n_vr),
         labels = NULL,
@@ -169,7 +185,11 @@ make_msa_plotly <- function(
         breaks = y_breaks$y_lab,
         labels = paste0(
           "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>", y_breaks$species, "</i></span>",
-          "<br><span style='font-size:8pt; line-height:1.1;'>", y_breaks$n_copies, " 16S gene(s)</span>"
+          "<br><span style='font-size:8pt; line-height:1.1;'>",
+          y_breaks$n_copies,
+          " 16S rRNA gene cop",
+          ifelse(y_breaks$n_copies == 1, "y", "ies"),
+          "</span>"
         ),
         trans = "reverse"
       ) +
@@ -226,7 +246,6 @@ make_msa_plotly <- function(
         )
       )
 
-    # biological copy count label for non-detailed mode, matched by taxa/species name
     copy_counts_nondetailed <- RADq %>%
       transmute(
         taxa = species,
@@ -259,7 +278,22 @@ make_msa_plotly <- function(
         height = 1.5,
         color = "black",
         linewidth = 0.35
-      ) +
+      )
+
+    # add variable region ID labels on top of each tile only if requested
+    if (isTRUE(vregionIDs)) {
+      p_msa <- p_msa +
+        geom_text(
+          data = groups_plot %>% filter(vregion %in% selected_vr),
+          aes(x = match(vregion, vr_levels_all), y = y + 0.08, label = group_id),
+          inherit.aes = FALSE,
+          color = "white",
+          size = 2.8,
+          fontface = "bold"
+        )
+    }
+
+    p_msa <- p_msa +
       scale_x_continuous(
         breaks = seq_len(n_vr),
         labels = NULL,
@@ -271,7 +305,11 @@ make_msa_plotly <- function(
         breaks = y_map_labeled$y,
         labels = paste0(
           "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>", y_map_labeled$taxa, "</i></span>",
-          "<br><span style='font-size:8pt; line-height:1.1;'>", y_map_labeled$n_copies, " 16S gene(s)</span>"
+          "<br><span style='font-size:8pt; line-height:1.1;'>",
+          y_map_labeled$n_copies,
+          " 16S rRNA gene cop",
+          ifelse(y_map_labeled$n_copies == 1, "y", "ies"),
+          "</span>"
         ),
         trans = "reverse"
       ) +
