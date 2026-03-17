@@ -24,6 +24,7 @@ make_msa_plotly <- function(
   # detailed mode data prep (RADq tiles)
 
   # keep only selected regions + keep only the columns we actually use for plotting
+  # enforce one row per biological copy per species per variable region
   RADqtiles <- RADq %>%
     filter(variable_region %in% selected_regions_clean) %>%
     transmute(
@@ -32,12 +33,13 @@ make_msa_plotly <- function(
       copy_num = as.numeric(copy_num),
       seq_id
     ) %>%
-    filter(!is.na(copy_num), !is.na(seq_id))
+    filter(!is.na(copy_num), !is.na(seq_id)) %>%
+    distinct(species, variable_region_clean, copy_num, .keep_all = TRUE)
 
   #####################################################################################
   # stack gene copies within each species, with gaps between species
 
-  gap <- 1.5  # vertical space between species blocks
+  gap <- 2
   vr_levels_all <- paste0("V", 1:9)
   selected_vr <- selected_regions_clean
 
@@ -47,7 +49,7 @@ make_msa_plotly <- function(
     arrange(species) %>%
     pull(species)
 
-  # determines spacing between species based on how many gene copies there are
+  # determines spacing between species based on biological copy number
   copies_tbl <- RADqtiles %>%
     distinct(species, copy_num) %>%
     count(species, name = "n_copies") %>%
@@ -59,41 +61,38 @@ make_msa_plotly <- function(
       y_lab = (start + end) / 2
     )
 
-  RADqtiles <- RADqtiles %>%
+  # map biological copy numbers to compact plotting rows within each species
+  copy_map <- RADqtiles %>%
+    distinct(species, copy_num) %>%
     mutate(species = factor(species, levels = species_levels)) %>%
+    arrange(species, copy_num) %>%
+    group_by(species) %>%
+    mutate(copy_row = row_number()) %>%
+    ungroup()
+
+  RADqtiles <- RADqtiles %>%
+    mutate(
+      species = factor(species, levels = species_levels),
+      seq_id_local = factor(substring(seq_id, 3))
+    ) %>%
     left_join(copies_tbl %>% select(species, start), by = "species") %>%
-    mutate(y = start + copy_num - 1)
+    left_join(copy_map, by = c("species", "copy_num")) %>%
+    mutate(
+      y = start + copy_row - 1,
+      hover_text = paste0(species, " copy number ", copy_num)
+    )
 
   # one label per species block
   y_breaks <- copies_tbl %>% select(species, y_lab, n_copies)
 
   #####################################################################################
-  # reorder copies within each species, groups like copies together
-
-  #makes hover text display "Species copy number"
-  RADqtiles <- RADqtiles %>%
-    mutate(seq_id_local = factor(substring(seq_id, 3))) %>%
-    group_by(species, variable_region_clean) %>%
-    add_count(seq_id_local, name = "seq_n") %>%
-    arrange(desc(seq_n), seq_id_local, copy_num, .by_group = TRUE) %>%
-    mutate(
-      copy_num = row_number(),
-      y = as.numeric(start) + as.numeric(copy_num) - 1,
-      hover_text = paste0(species, " copy number ", copy_num)
-    ) %>%
-    ungroup() %>%
-    select(-seq_n)
-
-  #####################################################################################
   # build ggplot
 
-  # base ggplot
   p_msa <- ggplot()
 
-  # if detailed mode is turned on
   if (detailed) {
 
-    # map each variable region to a numeric x position (same idea as non detailed)
+    # map each variable region to a numeric x position
     vr_levels <- vr_levels_all
     n_vr <- length(vr_levels)
     tile_w <- 0.7
@@ -102,8 +101,10 @@ make_msa_plotly <- function(
     RADqtiles <- RADqtiles %>%
       mutate(vx = match(variable_region_clean, vr_levels))
 
-    detailed_backbone_df <- RADqtiles %>%
-      distinct(species, y)
+    detailed_backbone_df <- copy_map %>%
+      left_join(copies_tbl %>% select(species, start), by = "species") %>%
+      mutate(y = start + copy_row - 1) %>%
+      distinct(species, copy_num, copy_row, y)
 
     # repeated gray headers above each species block
     species_header_df <- copies_tbl %>%
@@ -116,15 +117,14 @@ make_msa_plotly <- function(
       )
 
     # small gray copy number labels to the right of each backbone row
-    copy_num_df <- RADqtiles %>%
-      distinct(species, y, copy_num) %>%
+    copy_num_df <- copy_map %>%
+      left_join(copies_tbl %>% select(species, start), by = "species") %>%
       transmute(
-        y = y,
+        y = start + copy_row - 1,
         x = n_vr + 0.72 + backbone_pad,
         copy_label = copy_num
       )
 
-    # backbone
     p_msa <- p_msa +
       geom_tile(
         data = detailed_backbone_df,
@@ -157,10 +157,7 @@ make_msa_plotly <- function(
         width = tile_w,
         height = 0.75,
         linewidth = 0.35
-      )
-
-    # formatting
-    p_msa <- p_msa +
+      ) +
       scale_x_continuous(
         breaks = seq_len(n_vr),
         labels = NULL,
@@ -184,12 +181,12 @@ make_msa_plotly <- function(
         strip.text = element_text(size = 12)
       )
 
-    # dynamic plot height so tiles do not stretch when only a few species are selected
-    n_y_units <- max(c(RADqtiles$y, 1), na.rm = TRUE)
+    n_y_units <- max(c(copy_num_df$y, 1), na.rm = TRUE)
     plot_height <- max(500, 80 + (n_y_units * 18))
 
   } else {
-    # if detailed mode is turned off
+    gap <- 1.5
+
     groups_plot <- unique %>%
       select(taxa, any_of(selected_vr)) %>%
       pivot_longer(
@@ -218,7 +215,6 @@ make_msa_plotly <- function(
     n_vr <- length(vr_levels_all)
     tile_w <- 0.7
 
-    # always include first gray header, then repeat every 10 taxa after that
     header_idx <- seq(1, nrow(y_map), by = 10)
 
     header_rows <- y_map[header_idx, , drop = FALSE] %>%
@@ -230,8 +226,25 @@ make_msa_plotly <- function(
         )
       )
 
+    # biological copy count label for non-detailed mode, matched by taxa/species name
+    copy_counts_nondetailed <- RADq %>%
+      transmute(
+        taxa = species,
+        variable_region = variable_region,
+        copy_num = as.numeric(copy_num)
+      ) %>%
+      filter(
+        variable_region %in% selected_regions_clean,
+        !is.na(copy_num)
+      ) %>%
+      distinct(taxa, copy_num) %>%
+      count(taxa, name = "n_copies")
+
+    y_map_labeled <- y_map %>%
+      left_join(copy_counts_nondetailed, by = "taxa") %>%
+      mutate(n_copies = ifelse(is.na(n_copies), 0, n_copies))
+
     p_msa <- ggplot() +
-      # repeated gray headers
       geom_text(
         data = header_rows,
         aes(x = vx, y = y_header, label = vregion),
@@ -239,7 +252,6 @@ make_msa_plotly <- function(
         color = "black",
         size = 2.8
       ) +
-      # vregion blocks
       geom_tile(
         data = groups_plot %>% filter(vregion %in% selected_vr),
         aes(x = match(vregion, vr_levels_all), y = y, fill = factor(group_id)),
@@ -248,7 +260,6 @@ make_msa_plotly <- function(
         color = "black",
         linewidth = 0.35
       ) +
-      # x axis formatting
       scale_x_continuous(
         breaks = seq_len(n_vr),
         labels = NULL,
@@ -257,10 +268,10 @@ make_msa_plotly <- function(
         expand = c(0, 0)
       ) +
       scale_y_continuous(
-        breaks = y_map$y,
+        breaks = y_map_labeled$y,
         labels = paste0(
-          "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>", y_map$taxa, "</i></span>",
-          "<br><span style='font-size:8pt; line-height:1.1;'>", y_breaks$n_copies, " 16S gene(s)</span>"
+          "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>", y_map_labeled$taxa, "</i></span>",
+          "<br><span style='font-size:8pt; line-height:1.1;'>", y_map_labeled$n_copies, " 16S gene(s)</span>"
         ),
         trans = "reverse"
       ) +
@@ -273,8 +284,7 @@ make_msa_plotly <- function(
       ) +
       labs(x = NULL, y = NULL)
 
-    # dynamic plot height so tiles do not stretch when only a few taxa are selected
-    plot_height <- max(200, 80 + (nrow(y_map) * 32))
+    plot_height <- max(200, 80 + (max(y_map$y) * 25))
   }
 
   #####################################################################################
@@ -298,9 +308,6 @@ make_msa_plotly <- function(
       plot_bgcolor = "white",
       paper_bgcolor = "white"
     )
-
-  #####################################################################################
-  # final output
 
   p_plotly
 }

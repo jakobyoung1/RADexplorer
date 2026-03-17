@@ -22745,3 +22745,8 @@ Zwartia panacis
 Zwartia vadi
 Zymobacter palmae
 Zymomonas mobilis subsp. mobilis str. CP4 = NRRL B-14023
+test all
+test large
+test medium
+test small
+test similar

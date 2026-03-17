@@ -37,6 +37,84 @@ app_server <- function(input, output, session) {
   # selected download pipeline
   download_pipeline <- reactiveVal(NULL)
 
+  #########################################################################
+  # helper functions
+
+  get_species_from_genera <- function(selected_genera_vector) {
+    if (is.null(selected_genera_vector) || length(selected_genera_vector) == 0) {
+      return(character(0))
+    }
+
+    line_genus <- sub("\\s.*$", "", genus_species)
+    unique(genus_species[line_genus %in% selected_genera_vector])
+  }
+
+  update_taxa_selectize <- function(input_id, choices, selected = character(0)) {
+    updateSelectizeInput(
+      session,
+      input_id,
+      choices = choices,
+      selected = selected,
+      server = TRUE
+    )
+  }
+
+  update_entire_genus_label <- function(checkbox_id, n_genera, n_members, mode = c("analyze", "filter")) {
+    mode <- match.arg(mode)
+
+    genus_word <- if (n_genera == 1) "genus" else "genera"
+
+    label <- if (mode == "analyze") {
+      if (n_members == 1) {
+        paste0("Analyze the only member of the selected ", genus_word)
+      } else {
+        paste0("Analyze all ", n_members, " members of the selected ", genus_word)
+      }
+    } else {
+      if (n_members == 1) {
+        paste0("Filter the only member of the selected ", genus_word)
+      } else {
+        paste0("Filter all ", n_members, " members of the selected ", genus_word)
+      }
+    }
+
+    updateCheckboxInput(
+      session,
+      checkbox_id,
+      label = HTML(paste0("<i>", label, "</i>")),
+      value = FALSE
+    )
+  }
+
+  set_metascope_filter_card_state <- function(enabled) {
+    shinyjs::toggleState("selectGenusFilter", condition = enabled)
+    shinyjs::toggleState("entireGenusFilter", condition = enabled)
+    shinyjs::toggleState("selectTaxaFilter", condition = enabled)
+
+    if (enabled) {
+      shinyjs::removeClass("metascopeFilterCard", "text-muted")
+      shinyjs::runjs("
+        var el = document.getElementById('metascopeFilterCard');
+        if (el) {
+          el.style.opacity = '1';
+          el.style.backgroundColor = '';
+        }
+      ")
+    } else {
+      shinyjs::addClass("metascopeFilterCard", "text-muted")
+      shinyjs::runjs("
+        var el = document.getElementById('metascopeFilterCard');
+        if (el) {
+          el.style.opacity = '0.5';
+          el.style.backgroundColor = '#f8f9fa';
+        }
+      ")
+    }
+  }
+
+  #########################################################################
+  # menu screen setup
+
   # this puts the genus list into the drop down menu on the taxa select screen
   observeEvent(screen(), {
     req(screen() == "menu")
@@ -46,10 +124,19 @@ app_server <- function(input, output, session) {
 
     if (is.null(selected_taxa())) {
       session$onFlushed(function() {
-        updateSelectizeInput(session, "selectGenus", selected = "", choices = genus, server = TRUE)
+        updateSelectizeInput(
+          session,
+          "selectGenus",
+          selected = "",
+          choices = genus,
+          server = TRUE
+        )
       }, once = TRUE)
     }
   })
+
+  #########################################################################
+  # main taxa selection screen
 
   # this puts the filtered species list into the drop down menu after the genus/genera are selected
   # this is just a section that changes wording on the taxa select page based on how many genera / species you've selected
@@ -68,50 +155,21 @@ app_server <- function(input, output, session) {
       )
       shinyjs::disable("entireGenus")
 
-      updateSelectizeInput(
-        session,
-        "selectTaxa",
-        choices = character(0),
-        selected = character(0),
-        server = TRUE
-      )
+      update_taxa_selectize("selectTaxa", character(0), character(0))
       return()
     }
 
-    line_genus <- sub("\\s.*$", "", genus_species)
-    sp <- genus_species[line_genus %in% selected_genera_local]
-    n_members <- length(unique(sp))
+    sp <- get_species_from_genera(selected_genera_local)
+    n_members <- length(sp)
 
-    updateSelectizeInput(
-      session,
-      "selectTaxa",
-      choices = unique(sp),
-      selected = character(0),
-      server = TRUE
-    )
-
-    genus_word <- if (n_genera == 1) "genus" else "genera"
-    label <- if (n_members == 1) {
-      paste0("Analyze the only member of the selected ", genus_word)
-    } else {
-      paste0("Analyze all ", n_members, " members of the selected ", genus_word)
-    }
-
-    # sets the checkbox text, in italics
-    updateCheckboxInput(
-      session,
-      "entireGenus",
-      label = HTML(paste0("<i>", label, "</i>")),
-      value = FALSE
-    )
+    update_taxa_selectize("selectTaxa", sp, character(0))
+    update_entire_genus_label("entireGenus", n_genera, n_members, mode = "analyze")
   }, ignoreInit = TRUE)
 
   # selected number of species note under the speciesSelection checkbox
   output$speciesNote <- renderUI({
     selected_species <- input$selectTaxa
     n_selected <- if (is.null(selected_species)) 0 else length(selected_species)
-
-    col <- if (n_selected >= 1 && n_selected <= 15) "green" else "red"
 
     HTML(paste0(
       "<p><i>You have selected ",
@@ -131,37 +189,29 @@ app_server <- function(input, output, session) {
 
   # this actually puts all of the species options into the species selectize so radexplorer can keep track of the selected species
   observeEvent(input$entireGenus, {
-    req(screen() == "menu")
     req(input$selectGenus)
 
-    line_genus <- sub("\\s.*$", "", genus_species)
-    sp <- genus_species[line_genus %in% input$selectGenus]
+    sp <- get_species_from_genera(input$selectGenus)
 
     if (isTRUE(input$entireGenus)) {
-      updateSelectizeInput(
-        session,
-        "selectTaxa",
-        selected = sp,
-        choices = unique(sp),
-        server = TRUE
-      )
+      update_taxa_selectize("selectTaxa", sp, sp)
     } else {
-      updateSelectizeInput(
-        session,
-        "selectTaxa",
-        selected = character(0),
-        choices = unique(sp),
-        server = TRUE
-      )
+      update_taxa_selectize("selectTaxa", sp, character(0))
     }
   })
 
   # this activates the explore + download buttons on the menu page when the user has selected the taxa of interest
   observe({
-    ok <- length(input$selectGenus) > 0 && length(input$selectTaxa) > 0 && length(input$selectTaxa) <= 15
+    ok <- length(input$selectGenus) > 0 &&
+      length(input$selectTaxa) > 0 &&
+      length(input$selectTaxa) <= 15
+
     shinyjs::toggleState("download", condition = ok)
     shinyjs::toggleState("continueWithTaxa", condition = ok)
   })
+
+  #########################################################################
+  # RADx flow
 
   # this takes the user to RADx
   # and sets the selectedTaxa variable with the users selections
@@ -169,6 +219,54 @@ app_server <- function(input, output, session) {
   observeEvent(input$continueWithTaxa, {
     selected_genera(input$selectGenus)
     selected_taxa(input$selectTaxa)
+
+    if ("test all" %in% input$selectTaxa) {
+      test_species <- c(
+        "Pseudomonas aeruginosa", "Brucella suis", "Mycoplasma mobile",
+        "Salmonella enterica", "Escherichia coli", "Geobacter sulfurreducens",
+        "Treponema denticola", "Picrophilus oshimae", "Methylococcus capsulatus",
+        "Methanosarcina acetivorans", "Shigella flexneri", "Chromobacterium violaceum",
+        "Chlamydia pneumoniae", "Chlamydia caviae", "Mannheimia succiniciproducens",
+        "Rickettsia conorii", "Mesomycoplasma hyopneumoniae", "Brucella melitensis",
+        "Clostridium tepidum", "Mesoplasma florum", "Chlorobaculum tepidum",
+        "Rickettsia typhi", "Helicobacter hepaticus", "Clostridium tetani",
+        "Methanopyrus kandleri", "Helicobacter pylori"
+      )
+      selected_taxa(test_species)
+    } else if ("test large" %in% input$selectTaxa) {
+      test_species <- c(
+        "Pseudomonas aeruginosa", "Brucella suis", "Mycoplasma mobile",
+        "Salmonella enterica", "Escherichia coli", "Geobacter sulfurreducens",
+        "Treponema denticola", "Picrophilus oshimae", "Methylococcus capsulatus",
+        "Methanosarcina acetivorans", "Shigella flexneri", "Chromobacterium violaceum",
+        "Chlamydia pneumoniae", "Chlamydia caviae", "Mannheimia succiniciproducens",
+        "Rickettsia conorii", "Mesomycoplasma hyopneumoniae", "Brucella melitensis",
+        "Clostridium tepidum", "Mesoplasma florum", "Chlorobaculum tepidum"
+      )
+      selected_taxa(test_species)
+    } else if ("test medium" %in% input$selectTaxa) {
+      test_species <- c(
+        "Pseudomonas aeruginosa", "Brucella suis", "Mycoplasma mobile",
+        "Salmonella enterica", "Escherichia coli", "Geobacter sulfurreducens",
+        "Treponema denticola", "Picrophilus oshimae", "Methylococcus capsulatus",
+        "Methanosarcina acetivorans", "Shigella flexneri", "Chromobacterium violaceum",
+        "Chlamydia pneumoniae", "Chlamydia caviae", "Mannheimia succiniciproducens"
+      )
+      selected_taxa(test_species)
+    } else if ("test small" %in% input$selectTaxa) {
+      test_species <- c(
+        "Pseudomonas aeruginosa", "Brucella suis", "Mycoplasma mobile",
+        "Salmonella enterica", "Escherichia coli", "Geobacter sulfurreducens",
+        "Treponema denticola", "Picrophilus oshimae", "Methylococcus capsulatus"
+      )
+      selected_taxa(test_species)
+    } else if ("test similar" %in% input$selectTaxa) {
+      test_species <- c(
+        "Clostridium tepidum", "Escherichia coli", "Salmonella enterica",
+        "Shigella flexneri", "Chlamydia caviae"
+      )
+      selected_taxa(test_species)
+    }
 
     print(selected_taxa())
     ########## THIS IS WHERE WE SEND THE SELECTED TAXA TO RADALIGN AND RECIEVE RADq ############
@@ -190,6 +288,9 @@ app_server <- function(input, output, session) {
     #RADq(RADalign::selectVRegions(selected_vregions(), TRUE))
     ##########                                                                      ############
   })
+
+  #########################################################################
+  # screen navigation
 
   # this is the event that takes the user back to the main menu
   observeEvent(input$backToMenu, {
@@ -214,6 +315,56 @@ app_server <- function(input, output, session) {
     screen("metascope")
   })
 
+  # MetaScope instructions button goes to the instructions screen
+  observeEvent(input$metascopeInstructionsButton, {
+    screen("metascopeInstructions")
+  })
+
+  #########################################################################
+  # MetaScope screen logic
+
+  observe({
+    enabled <- isTRUE(input$useMetascopeFilters)
+    set_metascope_filter_card_state(enabled)
+  })
+
+  observeEvent(input$selectGenusFilter, {
+    selected_genera_filter <- input$selectGenusFilter
+    n_genera <- if (is.null(selected_genera_filter)) 0 else length(selected_genera_filter)
+
+    if (n_genera == 0) {
+      updateCheckboxInput(
+        session,
+        "entireGenusFilter",
+        label = HTML("<i>Filter all members of the selected genus/genera</i>"),
+        value = FALSE
+      )
+
+      update_taxa_selectize("selectTaxaFilter", character(0), character(0))
+      return()
+    }
+
+    sp <- get_species_from_genera(selected_genera_filter)
+    n_members <- length(sp)
+
+    update_taxa_selectize("selectTaxaFilter", sp, character(0))
+    update_entire_genus_label("entireGenusFilter", n_genera, n_members, mode = "filter")
+  }, ignoreInit = TRUE)
+
+  # this actually puts all of the species options into the MetaScope species selectize
+  # so the app can keep track of the selected species there too
+  observeEvent(input$entireGenusFilter, {
+    req(input$selectGenusFilter)
+
+    sp <- get_species_from_genera(input$selectGenusFilter)
+
+    if (isTRUE(input$entireGenusFilter)) {
+      update_taxa_selectize("selectTaxaFilter", sp, sp)
+    } else {
+      update_taxa_selectize("selectTaxaFilter", sp, character(0))
+    }
+  })
+
   observeEvent(input$port, {
     ########## THIS IS WHERE WE DOWNLOAD THE FILES FOR PORTING TO OTHER PIPELINES ############
     if (download_pipeline() == "metascope") {
@@ -222,7 +373,6 @@ app_server <- function(input, output, session) {
       } else {
         RADalign::download_RAD_data("MetaScope", selected_taxa())
       }
-      screen("metascopeInstructions")
     } else if (download_pipeline() == "kraken") {
 
     } else if (download_pipeline() == "qiime2") {
@@ -230,6 +380,9 @@ app_server <- function(input, output, session) {
     }
     ##########                                                                    ############
   })
+
+  #########################################################################
+  # screen rendering
 
   # this is the meat of the screen rendering
   # it selects the screen that the user is seeing based on the variable above and renders it accordingly
@@ -246,6 +399,9 @@ app_server <- function(input, output, session) {
       metascope_instructions_ui()
     }
   })
+
+  #########################################################################
+  # plot rendering
 
   msa_plot <- eventReactive(list(input$continueWithTaxa, input$varRegions, input$detailedView), {
     make_msa_plotly(

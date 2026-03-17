@@ -16,7 +16,16 @@ metascope_instructions_ui <- function() {
               h4("MetaScope Instructions", style = "margin:0;"),
               actionButton("backToMetascopeDownload", "Back", style = "margin-left:auto;")
             ),
-            
+
+            p(
+              "The following link contains general instructions for using MetaScope. The steps below outline specific changes that must be made to the general MetaScope instructions in order to incorporate the RADport database files. "
+            ),
+            tags$a(
+              href = "https://wejlab.github.io/metascope-docs/articles/MetaScope_vignette.html",
+              "MetaScope general instructions",
+              target = "_blank"
+            ),
+
             h5("STEP 1 - MetaDemultiplex"),
             tags$pre(
               style = "white-space:pre-wrap; word-break:break-word; overflow-x:auto;",
@@ -35,7 +44,7 @@ demult <-
 demult        ')
             ),
             p("Note: Only complete this step if your reads require demultiplexing, otherwise skip it."),
-            
+
             h5("STEP 2 - MetaRef: Creating a Taxonomy Database"),
             tags$pre(
               style = "white-space:pre-wrap; word-break:break-word; overflow-x:auto;",
@@ -50,7 +59,7 @@ tmp_accession <- file.path("your_folder", "MetaScope_accessions_db.sqlite")
 /Users/user/Downloads/RADdownloads_05032026_204741_KYvVgrko
                         ')
             ),
-            
+
             h5("STEP 3 - MetaRef: Downloading target genomes"),
             tags$pre(
               style = "white-space:pre-wrap; word-break:break-word; overflow-x:auto;",
@@ -65,7 +74,7 @@ target_ref_temp <- file.path("your_folder", "Metascope_reference_dir")
 /Users/user/Downloads/RADdownloads_05032026_204741_KYvVgrko
                         ')
             ),
-            
+
             h5("STEP 4 - MetaRef: Downloading filter genomes"),
             p("IF filter genomes are needed:"),
             tags$pre(
@@ -89,7 +98,7 @@ filter_ref_temp <- file.path("your_folder", "Metascope_filter_dir")
 /Users/user/Downloads/RADdownloads_05032026_204741_KYvVgrko
                         ')
             ),
-            
+
             h5("STEP 5 - Creating indices using a given aligner"),
             tags$pre(
               style = "white-space:pre-wrap; word-break:break-word; overflow-x:auto;",
@@ -116,7 +125,7 @@ mk_bowtie_index(
                       ')
             ),
         p("Note: If you ran the above lines of code correctly, target_ref_temp and filter_ref_temp will refer to your downloaded files."),
-        
+
         h5("STEP 6 - MetaAlign"),
         tags$pre(
           style = "white-space:pre-wrap; word-break:break-word; overflow-x:auto;",
@@ -140,7 +149,7 @@ target_map <-
                       ')
         ),
         p("Note: If your reads require demultiplexing, refer to the first step above."),
-        
+
         h5("STEP 7 - MetaFilter"),
         tags$pre(
           style = "white-space:pre-wrap; word-break:break-word; overflow-x:auto;",
@@ -157,7 +166,7 @@ final_map <- filter_host_bowtie(
 )
             ')
         ),
-      
+
       h5("STEP 8 - MetaID: Origin Genome Identification"),
       tags$pre(
         style = "white-space:pre-wrap; word-break:break-word; overflow-x:auto;",
