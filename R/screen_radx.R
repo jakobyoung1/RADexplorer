@@ -8,7 +8,7 @@ radx_screen_ui <- function() {
         "varRegions",
         "Select all 16S gene variable regions to include:",
         choices = setNames(paste0("V",1:9), 1:9),
-        selected = paste0("V",1:9)
+        selected = c("V4")
       ),
       div(
         style = "margin-top:-16px; margin-bottom:8px; font-size:12px;",

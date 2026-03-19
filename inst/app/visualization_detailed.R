@@ -5,17 +5,16 @@ library(ggtext)
 
 build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) {
 
-  # unpack plotting inputs
+  # plotting inputs
   RADqtiles <- layout_data$RADqtiles %>%
     mutate(vx = match(variable_region_clean, vr_levels_all))
-
-  copies_tbl <- layout_data$copies_tbl
-  copy_map <- layout_data$copy_map
+  species_layout <- layout_data$species_layout
+  copy_layout <- layout_data$copy_layout
   y_breaks <- layout_data$y_breaks
   group_bracket_df <- layout_data$group_bracket_df
   unique_taxa_df <- layout_data$unique_taxa_df
 
-  # set plotting constants
+  # plotting constants
   n_vr <- length(vr_levels_all)
   tile_w <- 0.7
   backbone_pad <- 1.25
@@ -24,18 +23,23 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
   bracket_arm <- 0.12
   check_x <- bracket_x + 0.03
 
-  # build tile colors
-  tile_palette <- make_detailed_tile_palette(RADqtiles)
+  # tile colors
+  tile_levels <- sort(unique(substring(RADqtiles$seq_id, 3)))
+  tile_palette <- grDevices::hcl.colors(
+    max(length(tile_levels), 3),
+    palette = "Set 2"
+  )[seq_along(tile_levels)]
+  names(tile_palette) <- tile_levels
 
-  # make one backbone row per copy
-  detailed_backbone_df <- copy_map %>%
-    left_join(select(copies_tbl, species, start), by = "species") %>%
+  # backbone rows
+  detailed_backbone_df <- copy_layout %>%
+    left_join(select(species_layout, species, start), by = "species") %>%
     mutate(y = start + copy_row - 1) %>%
     distinct(species, copy_num, copy_row, y)
 
-  # repeat V-region labels above each species block
-  species_header_df <- tibble(
-    y_header = copies_tbl$start - 0.8
+  # repeated header labels
+  header_rows <- tibble(
+    y_header = species_layout$start - 0.8
   ) %>%
     tidyr::crossing(
       tibble(
@@ -44,7 +48,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
       )
     )
 
-  # start the detailed plot
+  # base plot
   p_msa <- ggplot() +
     geom_tile(
       data = detailed_backbone_df,
@@ -56,7 +60,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
       height = 0.20
     ) +
     geom_text(
-      data = species_header_df,
+      data = header_rows,
       aes(x = vx, y = y_header, label = variable_region_clean),
       inherit.aes = FALSE,
       color = "black",
@@ -72,7 +76,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
     ) +
     scale_fill_manual(values = tile_palette)
 
-  # add red brackets for grouped taxa
+  # grouped taxon brackets
   if (nrow(group_bracket_df) > 0) {
     p_msa <- p_msa +
       geom_segment(
@@ -107,7 +111,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
       )
   }
 
-  # add green checks for unique taxa
+  # unique taxon checks
   if (nrow(unique_taxa_df) > 0) {
     p_msa <- p_msa +
       geom_text(
@@ -120,7 +124,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
       )
   }
 
-  # add tile labels if requested
+  # tile IDs
   if (isTRUE(vregionIDs)) {
     p_msa <- p_msa +
       geom_text(
@@ -133,7 +137,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
       )
   }
 
-  # finish axes and styling
+  # axes and theme
   p_msa <- p_msa +
     scale_x_continuous(
       breaks = seq_len(n_vr),
@@ -145,7 +149,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
     scale_y_continuous(
       breaks = y_breaks$y_lab,
       labels = make_species_axis_labels(y_breaks$species, y_breaks$n_copies),
-      limits = c(max(detailed_backbone_df$y) + 0.5, min(species_header_df$y_header) - 0.6),
+      limits = c(max(detailed_backbone_df$y) + 0.5, min(header_rows$y_header) - 0.6),
       expand = c(0, 0),
       trans = "reverse"
     ) +
@@ -157,9 +161,10 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
       strip.text = element_text(size = 12)
     )
 
-  # scale plot height with number of rows
+  # plot height
   plot_height <- max(500, 80 + max(detailed_backbone_df$y, 1, na.rm = TRUE) * 18)
 
+  # return plot and height
   list(
     plot = p_msa,
     plot_height = plot_height

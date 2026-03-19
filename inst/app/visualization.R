@@ -8,6 +8,7 @@ make_msa_plotly <- function(
     RADq,
     unique,
     groups,
+    uniqueVregions,
     varRegions = c("V1","V2","V3","V4","V5","V6","V7","V8","V9"),
     highlight_unique = FALSE,
     detailed = TRUE,
@@ -30,18 +31,18 @@ make_msa_plotly <- function(
     RADq = RADq,
     unique = unique,
     groups = groups,
+    uniqueVregions = uniqueVregions,
     selected_regions_clean = selected_regions_clean
-  )
-
-  # build shared species layout for detailed mode
-  layout_data <- build_species_layout(
-    RADqtiles = prep$RADqtiles,
-    groups_info = prep$groups_info,
-    gap = 2
   )
 
   # build the requested plot mode
   if (isTRUE(detailed)) {
+    layout_data <- build_species_layout(
+      RADqtiles = prep$RADqtiles,
+      groups_info = prep$groups_info,
+      gap = 2
+    )
+
     built <- build_detailed_plot(
       layout_data = layout_data,
       vr_levels_all = vr_levels_all,

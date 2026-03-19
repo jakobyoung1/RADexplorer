@@ -33,6 +33,7 @@ app_server <- function(input, output, session) {
   # this keeps track of the RADq dataframe that is returned from RADalign
   RADq <- reactiveVal(NULL)
   uniqueRADq <- reactiveVal(NULL)
+  uniqueVregions <- reactiveVal(NULL)
   RADqGroups <- reactiveVal(NULL)
   loaded <- reactiveVal(FALSE)
 
@@ -275,11 +276,12 @@ app_server <- function(input, output, session) {
     RADq(RADalign::createRADq(selected_taxa(), TRUE))
     uniqueRADq(RADalign::createSummarizedIDs(TRUE))
     RADqGroups(RADalign::createRADqGroups(selected_vregions(), TRUE))
+    uniqueVregions(RADalign::createUniqueVregions(TRUE))
     ##########                                                                      ############
     #print(utils::head(RADq()))
     #print(class(uniqueRADq()))
     #print(uniqueRADq())
-    print(RADqGroups())
+    #print(RADqGroups())
 
     screen("radx")
   })
@@ -424,6 +426,7 @@ app_server <- function(input, output, session) {
       RADq = RADq(),
       unique = uniqueRADq(),
       groups = RADqGroups(),
+      uniqueVregions = uniqueVregions(),
       varRegions = selected_vregions(),
       detailed = input$detailedView,
       vregionIDs = input$vregionIDs
