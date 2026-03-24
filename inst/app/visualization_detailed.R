@@ -3,7 +3,7 @@
 library(tidyverse)
 library(ggtext)
 
-build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) {
+build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs = FALSE) {
 
   # plotting inputs
   RADqtiles <- layout_data$RADqtiles %>%
@@ -43,6 +43,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
 
   # repeated header labels
   header_rows <- tibble(
+    species = species_layout$species,
     y_header = species_layout$start - 0.8
   ) %>%
     tidyr::crossing(
@@ -51,6 +52,26 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
         vx = seq_along(vr_levels_all)
       )
     )
+
+  unique <- unique %>%
+    dplyr::rename(species = taxa) %>%
+    tidyr::pivot_longer(cols = 2:10, names_to = "variable_region_clean", values_to = "unique") %>%
+    dplyr::mutate(unique = as.logical(unique))
+
+  header_rows <- header_rows %>%
+    dplyr::left_join(unique, by = c("species", "variable_region_clean"))
+
+  grouped_species <- setdiff(
+    as.character(species_layout$species),
+    as.character(unique_taxa_df$species)
+  )
+
+  header_rows <- header_rows %>%
+    dplyr::mutate(
+      show_star = !is.na(unique) & unique & species %in% grouped_species
+    )
+
+  print(header_rows)
 
   # base plot
   p_msa <- ggplot() +
@@ -65,7 +86,11 @@ build_detailed_plot <- function(layout_data, vr_levels_all, vregionIDs = FALSE) 
     ) +
     geom_text(
       data = header_rows,
-      aes(x = vx, y = y_header, label = variable_region_clean),
+      aes(
+        x = vx,
+        y = y_header,
+        label = ifelse(show_star, paste0("*", variable_region_clean, ""), variable_region_clean)
+      ),
       inherit.aes = FALSE,
       color = "black",
       size = 2.8

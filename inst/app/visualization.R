@@ -46,6 +46,7 @@ make_msa_plotly <- function(
     built <- build_detailed_plot(
       layout_data = layout_data,
       vr_levels_all = vr_levels_all,
+      unique = uniqueVregions,
       vregionIDs = vregionIDs
     )
   } else {

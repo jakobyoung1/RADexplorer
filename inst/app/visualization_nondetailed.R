@@ -52,7 +52,7 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
 
   # repeated header labels
   header_rows <- tibble(
-    y_header = y_map$y[seq(1, nrow(y_map), by = 5)] - 1.4
+    y_header = y_map$y[seq(1, nrow(y_map), by = 1)] - 1.4
   ) %>%
     tidyr::crossing(
       tibble(
@@ -96,7 +96,6 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     filter(n_taxa == 1) %>%
     distinct(taxa, y)
 
-  # base plot
   # base plot
   p_msa <- ggplot() +
     geom_text(

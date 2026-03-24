@@ -21,7 +21,7 @@ radx_screen_ui <- function() {
       ),
       input_switch(
         "vregionIDs",
-        label = "Display V-Region IDs",
+        label = "Display V-Region Labels",
         value = FALSE
       ),
       div(
