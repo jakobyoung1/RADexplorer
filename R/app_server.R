@@ -45,6 +45,9 @@ app_server <- function(input, output, session) {
   # selected download pipeline
   download_pipeline <- shiny::reactiveVal(NULL)
 
+  # loading flag
+  loading <- shiny::reactiveVal(FALSE)
+
   #########################################################################
   # helper functions
 
@@ -187,15 +190,20 @@ app_server <- function(input, output, session) {
 
   # sends selected taxa to RADalign and opens the explorer
   shiny::observeEvent(input$continueWithTaxa, {
-    print(selected_taxa())
+    taxa_now <- isolate(selected_taxa())
+    vregions_now <- isolate(selected_vregions())
 
-    ########## THIS IS WHERE WE SEND THE SELECTED TAXA TO RADALIGN AND RECIEVE RADq ############
-    RADq(RADalign::createRADq(selected_taxa(), TRUE))
-    uniqueRADq(RADalign::createSummarizedIDs(TRUE))
-    RADqGroups(RADalign::createRADqGroups(selected_vregions(), TRUE))
-    ##########                                                                      ############
+    loading(TRUE)
+    screen("loading")
 
-    screen("radx")
+    later::later(function() {
+      RADq(RADalign::createRADq(taxa_now, TRUE))
+      uniqueRADq(RADalign::createSummarizedIDs(TRUE))
+      RADqGroups(RADalign::createRADqGroups(vregions_now, TRUE))
+
+      loading(FALSE)
+      screen("radx")
+    }, delay = 0)
   })
 
   # updates selected variable regions
@@ -322,6 +330,8 @@ app_server <- function(input, output, session) {
       radx_screen_ui()
     } else if (screen() == "menu") {
       menu_screen_ui()
+    } else if (screen() == "loading") {
+      loading_screen_ui()
     } else if (screen() == "RADport") {
       radport_screen_ui()
     } else if (screen() == "metascope") {
@@ -338,6 +348,8 @@ app_server <- function(input, output, session) {
   msa_plot <- shiny::eventReactive(
     list(input$continueWithTaxa, input$varRegions, input$detailedView, input$vregionIDs),
     {
+      shiny::req(RADq(), uniqueRADq(), RADqGroups())
+
       print(RADq())
 
       make_msa_plotly(
