@@ -1,13 +1,10 @@
 # helper for detailed RADexplorer plot
 
-library(tidyverse)
-library(ggtext)
-
 build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs = FALSE) {
 
   # plotting inputs
-  RADqtiles <- layout_data$RADqtiles %>%
-    mutate(vx = match(variable_region_clean, vr_levels_all))
+  RADqtiles <- layout_data$RADqtiles |>
+    dplyr::mutate(vx = match(variable_region_clean, vr_levels_all))
   species_layout <- layout_data$species_layout
   copy_layout <- layout_data$copy_layout
   y_breaks <- layout_data$y_breaks
@@ -36,29 +33,29 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
   names(tile_palette) <- tile_levels
 
   # backbone rows
-  detailed_backbone_df <- copy_layout %>%
-    left_join(select(species_layout, species, start), by = "species") %>%
-    mutate(y = start + copy_row - 1) %>%
-    distinct(species, copy_num, copy_row, y)
+  detailed_backbone_df <- copy_layout |>
+    dplyr::left_join(dplyr::select(species_layout, species, start), by = "species") |>
+    dplyr::mutate(y = start + copy_row - 1) |>
+    dplyr::distinct(species, copy_num, copy_row, y)
 
   # repeated header labels
-  header_rows <- tibble(
+  header_rows <- tibble::tibble(
     species = species_layout$species,
     y_header = species_layout$start - 0.8
-  ) %>%
+  ) |>
     tidyr::crossing(
-      tibble(
+      tibble::tibble(
         variable_region_clean = vr_levels_all,
         vx = seq_along(vr_levels_all)
       )
     )
 
-  unique <- unique %>%
-    dplyr::rename(species = taxa) %>%
-    tidyr::pivot_longer(cols = 2:10, names_to = "variable_region_clean", values_to = "unique") %>%
+  unique <- unique |>
+    dplyr::rename(species = taxa) |>
+    tidyr::pivot_longer(cols = 2:10, names_to = "variable_region_clean", values_to = "unique") |>
     dplyr::mutate(unique = as.logical(unique))
 
-  header_rows <- header_rows %>%
+  header_rows <- header_rows |>
     dplyr::left_join(unique, by = c("species", "variable_region_clean"))
 
   grouped_species <- setdiff(
@@ -66,7 +63,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
     as.character(unique_taxa_df$species)
   )
 
-  header_rows <- header_rows %>%
+  header_rows <- header_rows |>
     dplyr::mutate(
       show_star = !is.na(unique) & unique & species %in% grouped_species
     )
@@ -74,19 +71,19 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
   print(header_rows)
 
   # base plot
-  p_msa <- ggplot() +
-    geom_tile(
+  p_msa <- ggplot2::ggplot() +
+    ggplot2::geom_tile(
       data = detailed_backbone_df,
-      aes(x = (n_vr + 1) / 2, y = y),
+      ggplot2::aes(x = (n_vr + 1) / 2, y = y),
       inherit.aes = FALSE,
       fill = "grey80",
       color = NA,
       width = backbone_width,
       height = 0.20
     ) +
-    geom_text(
+    ggplot2::geom_text(
       data = header_rows,
-      aes(
+      ggplot2::aes(
         x = vx,
         y = y_header,
         label = ifelse(show_star, paste0("*", variable_region_clean, ""), variable_region_clean)
@@ -95,22 +92,22 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
       color = "black",
       size = 2.8
     ) +
-    geom_tile(
+    ggplot2::geom_tile(
       data = RADqtiles,
-      aes(x = vx, y = y, fill = seq_id_local, text = hover_text),
+      ggplot2::aes(x = vx, y = y, fill = seq_id_local, text = hover_text),
       color = "black",
       width = tile_w,
       height = 0.75,
       linewidth = 0.35
     ) +
-    scale_fill_manual(values = tile_palette)
+    ggplot2::scale_fill_manual(values = tile_palette)
 
   # grouped taxon brackets
   if (nrow(group_bracket_df) > 0) {
     p_msa <- p_msa +
-      geom_segment(
+      ggplot2::geom_segment(
         data = group_bracket_df,
-        aes(y = y_start, yend = y_end),
+        ggplot2::aes(y = y_start, yend = y_end),
         x = bracket_x,
         xend = bracket_x,
         inherit.aes = FALSE,
@@ -118,9 +115,9 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
         linewidth = 0.75,
         lineend = "round"
       ) +
-      geom_segment(
+      ggplot2::geom_segment(
         data = group_bracket_df,
-        aes(y = y_start, yend = y_start),
+        ggplot2::aes(y = y_start, yend = y_start),
         x = bracket_x,
         xend = bracket_x + bracket_arm,
         inherit.aes = FALSE,
@@ -128,9 +125,9 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
         linewidth = 0.75,
         lineend = "round"
       ) +
-      geom_segment(
+      ggplot2::geom_segment(
         data = group_bracket_df,
-        aes(y = y_end, yend = y_end),
+        ggplot2::aes(y = y_end, yend = y_end),
         x = bracket_x,
         xend = bracket_x + bracket_arm,
         inherit.aes = FALSE,
@@ -143,9 +140,9 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
   # unique taxon checks
   if (nrow(unique_taxa_df) > 0) {
     p_msa <- p_msa +
-      geom_text(
+      ggplot2::geom_text(
         data = unique_taxa_df,
-        aes(x = check_x, y = y_lab),
+        ggplot2::aes(x = check_x, y = y_lab),
         label = "✔",
         inherit.aes = FALSE,
         color = "green3",
@@ -156,9 +153,9 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
   # tile IDs
   if (isTRUE(vregionIDs)) {
     p_msa <- p_msa +
-      geom_text(
+      ggplot2::geom_text(
         data = RADqtiles,
-        aes(x = vx, y = y + 0.08, label = as.character(seq_id_local)),
+        ggplot2::aes(x = vx, y = y + 0.08, label = as.character(seq_id_local)),
         inherit.aes = FALSE,
         color = "white",
         size = 2.5,
@@ -168,26 +165,26 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, vregionIDs =
 
   # axes and theme
   p_msa <- p_msa +
-    scale_x_continuous(
+    ggplot2::scale_x_continuous(
       breaks = seq_len(n_vr),
       labels = NULL,
       position = "top",
       limits = c(0.3 - backbone_pad, n_vr + 1.2 + backbone_pad),
       expand = c(0, 0)
     ) +
-    scale_y_continuous(
+    ggplot2::scale_y_continuous(
       breaks = y_breaks$y_lab,
       labels = make_species_axis_labels(y_breaks$species, y_breaks$n_copies),
       limits = c(max(detailed_backbone_df$y) + 0.5, min(header_rows$y_header) - 0.6),
       expand = c(0, 0),
       trans = "reverse"
     ) +
-    labs(x = NULL, y = NULL) +
-    theme_minimal() +
-    theme(
+    ggplot2::labs(x = NULL, y = NULL) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(
       legend.position = "none",
       axis.text.y = ggtext::element_markdown(margin = ggplot2::margin(r = 18)),
-      strip.text = element_text(size = 12)
+      strip.text = ggplot2::element_text(size = 12)
     )
 
   # plot height

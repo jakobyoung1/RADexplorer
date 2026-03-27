@@ -1,37 +1,38 @@
 radx_screen_ui <- function() {
   # rad explorer menu
-  page_sidebar(
-    sidebar = sidebar(
-      h5("Options"),
+  bslib::page_sidebar(
+    sidebar = bslib::sidebar(
+      shiny::h5("Options"),
       # variable region select
-      checkboxGroupInput(
+      shiny::checkboxGroupInput(
         "varRegions",
         "Select all 16S gene variable regions to include:",
-        choices = setNames(paste0("V",1:9), 1:9),
+        choices = paste0("V", 1:9),
         selected = c("V4")
       ),
-      div(
+      shiny::div(
         style = "margin-top:-16px; margin-bottom:8px; font-size:12px;",
-        actionLink("deselectVarRegions", "Deselect all v-regions")
+        shiny::actionLink("deselectVarRegions", "Deselect all v-regions")
       ),
-      input_switch(
+      bslib::input_switch(
         "detailedView",
         label = "Detailed View",
         value = TRUE
       ),
-      input_switch(
+      bslib::input_switch(
         "vregionIDs",
         label = "Display V-Region Labels",
         value = FALSE
       ),
-      div(
+      shiny::div(
         style = "display:flex; gap:10px; width:100%;",
-        actionButton("backToMenu", "Back", style = "flex:1;")
+        shiny::actionButton("backToMenu", "Back", style = "flex:1;")
       )
     ),
-    card(
-      conditionalPanel("input.continueWithTaxa > 0",
-                       plotlyOutput("visual", height = "650px")
+    bslib::card(
+      shiny::conditionalPanel(
+        "input.continueWithTaxa > 0",
+        plotly::plotlyOutput("visual", height = "650px")
       )
     )
   )

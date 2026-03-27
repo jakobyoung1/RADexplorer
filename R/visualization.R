@@ -6,7 +6,6 @@
 #' @param RADq Data frame of RADq results.
 #' @param unique Data frame of summarized unique IDs.
 #' @param groups Data frame of taxa grouping information.
-#' @param uniqueVregions Data frame of unique variable-region information.
 #' @param varRegions Character vector of variable regions to display.
 #' @param highlight_unique Logical; whether to highlight unique regions.
 #' @param detailed Logical; whether to build the detailed plot view.
@@ -19,7 +18,6 @@ make_msa_plotly <- function(
     RADq,
     unique,
     groups,
-    uniqueVregions,
     varRegions = c("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9"),
     highlight_unique = FALSE,
     detailed = TRUE,
@@ -28,17 +26,16 @@ make_msa_plotly <- function(
 ) {
 
   # user selected variable regions
-  selected_regions_clean <- varRegions
   vr_levels_all <- paste0("V", 1:9)
-  selected_vr <- selected_regions_clean
+  selected_vr <- varRegions
+  selected_regions_clean <- varRegions
 
   # standardize and prep shared inputs
   prep <- standardize_plot_inputs(
     RADq = RADq,
     unique = unique,
     groups = groups,
-    uniqueVregions = uniqueVregions,
-    selected_regions_clean = selected_regions_clean
+    varRegions = varRegions
   )
 
   # build the requested plot mode
@@ -52,7 +49,7 @@ make_msa_plotly <- function(
     built <- build_detailed_plot(
       layout_data = layout_data,
       vr_levels_all = vr_levels_all,
-      unique = uniqueVregions,
+      unique = prep$unique,
       vregionIDs = vregionIDs
     )
   } else {
