@@ -108,7 +108,21 @@ app_server <- function(input, output, session) {
     sort(genus_species[genus_lookup %in% selected_genera])
   }
 
-  # reloads the taxa dropdown whenever user returns to the menu
+  # expands any "[Genus] - All Species" selections to their species
+  expand_selected_taxa <- function(taxa) {
+    taxa <- taxa %||% character(0)
+    if (length(taxa) == 0) {
+      return(character(0))
+    }
+
+    genus_labels <- taxa[grepl(" - All Species$", taxa)]
+    direct_taxa <- taxa[!grepl(" - All Species$", taxa)]
+
+    genus_taxa <- unlist(lapply(genus_labels, RADalign::get_species_from_genus), use.names = FALSE)
+
+    sort(unique(c(direct_taxa, genus_taxa)))
+  }
+
   # reloads the taxa dropdown whenever user returns to the menu
   shiny::observeEvent(screen(), {
     shiny::req(screen() == "menu")
@@ -128,7 +142,7 @@ app_server <- function(input, output, session) {
 
   # note under the taxa selector
   output$speciesNote <- shiny::renderUI({
-    n_selected <- length(selected_taxa() %||% character(0))
+    n_selected <- length(expand_selected_taxa(selected_taxa()))
     estimated_time <- n_selected * 3.58 + 6
 
     tags$div(
@@ -166,7 +180,7 @@ app_server <- function(input, output, session) {
   })
 
   shiny::observeEvent(input$continueWithTaxa, {
-    taxa_now <- isolate(selected_taxa())
+    taxa_now <- isolate(expand_selected_taxa(selected_taxa()))
     vregions_now <- isolate(selected_vregions())
 
     loading(TRUE)

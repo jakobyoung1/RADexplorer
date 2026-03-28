@@ -39,9 +39,11 @@ radx_screen_ui <- function() {
           tags$br(),
           "A green checkmark (",
           span("✓", style = "color: green; font-weight: bold;"),
-          ") below indicates that a taxon can be identified using the selected v-region(s), while taxa grouped within a red bracket (",
+          ") indicates that a taxon can be identified using the selected v-region(s). ",
+          tags$br(),
+          "A red bracket (",
           span("[", style = "color: red; font-weight: bold;"),
-          ") cannot be distinguished from one another. ",
+          ") groups taxa that cannot be distinguished from one another with the selected v-region(s). ",
           tags$small(
             style = "display:block; font-style:italic; margin-top:8px; margin-bottom:12px;",
             "Note: Colors designate identical sequences within a v-region. Colors should not be compared across columns."

@@ -17,7 +17,7 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     dplyr::ungroup()
 
   # plotting constants
-  gap <- 1
+  gap <- 1.5
   n_vr <- length(vr_levels_all)
   tile_w <- 0.7
   bracket_x <- 0.28
@@ -93,7 +93,7 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
   p_msa <- p_msa +
     ggplot2::geom_text(
       data = header_rows,
-      ggplot2::aes(x = vx, y = y_header + 0.25, label = vregion),
+      ggplot2::aes(x = vx, y = y_header + 0.6, label = vregion),
       inherit.aes = FALSE,
       color = "black",
       size = 2.8
