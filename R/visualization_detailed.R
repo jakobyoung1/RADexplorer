@@ -21,62 +21,57 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, selected_vr,
   check_x <- bracket_x + 0.03
 
   # tile colors
-  tile_levels <- sort(unique(substring(RADqtiles$seq_id, 3)))
-  tile_palette <- grDevices::hcl(
-    h = seq(15, 375, length.out = length(tile_levels) + 1)[seq_along(tile_levels)],
-    c = 100,
-    l = 65
-  )
-  names(tile_palette) <- tile_levels
+  tile_palette <- build_tile_palette(RADqtiles$seq_id)
 
   # backbone rows
   detailed_backbone_df <- copy_layout |>
-    dplyr::left_join(dplyr::select(species_layout, species, start), by = "species") |>
+    dplyr::left_join(
+      dplyr::select(species_layout, species, start),
+      by = "species"
+    ) |>
     dplyr::mutate(y = start + copy_row - 1) |>
     dplyr::distinct(species, copy_num, copy_row, y)
 
   # repeated header labels
   header_rows <- tidyr::crossing(
-    tibble::tibble(species = species_layout$species, y_header = species_layout$start - 0.8),
-    tibble::tibble(variable_region_clean = vr_levels_all, vx = seq_along(vr_levels_all))
+    tibble::tibble(
+      species = species_layout$species,
+      y_header = species_layout$start - 0.8
+    ),
+    tibble::tibble(
+      variable_region_clean = vr_levels_all,
+      vx = seq_along(vr_levels_all)
+    )
   )
-
-  # highlighted variable-region columns
-  selected_vr_rects <- if (nrow(detailed_backbone_df) > 0) {
-    tibble::tibble(vx = match(selected_vr, vr_levels_all)) |>
-      dplyr::filter(!is.na(vx)) |>
-      dplyr::distinct() |>
-      dplyr::transmute(
-        xmin = vx - 0.48,
-        xmax = vx + 0.48,
-        ymin = min(header_rows$y_header) - 0.4,
-        ymax = max(detailed_backbone_df$y) + 0.5
-      )
-  } else {
-    tibble::tibble(xmin = numeric(), xmax = numeric(), ymin = numeric(), ymax = numeric())
-  }
 
   unique_long <- unique |>
     dplyr::rename(species = taxa) |>
     tidyr::pivot_longer(2:10, names_to = "variable_region_clean", values_to = "unique") |>
     dplyr::mutate(unique = as.logical(unique))
 
-  grouped_species <- setdiff(as.character(species_layout$species), as.character(unique_taxa_df$species))
+  grouped_species <- setdiff(
+    as.character(species_layout$species),
+    as.character(unique_taxa_df$species)
+  )
 
   header_rows <- header_rows |>
     dplyr::left_join(unique_long, by = c("species", "variable_region_clean")) |>
     dplyr::mutate(show_star = !is.na(unique) & unique & species %in% grouped_species)
 
+  # highlighted variable-region columns
+  selected_vr_rects <- build_selected_vr_rects(
+    selected_vr = selected_vr,
+    vr_levels_all = vr_levels_all,
+    ymin = min(header_rows$y_header) - 0.4,
+    ymax = max(detailed_backbone_df$y) + 0.5
+  )
+
   # base plot
-  p_msa <- ggplot2::ggplot() +
-    ggplot2::geom_rect(
-      data = selected_vr_rects,
-      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-      inherit.aes = FALSE,
-      fill = "gold",
-      alpha = 0.75,
-      color = NA
-    ) +
+  p_msa <- ggplot2::ggplot()
+
+  p_msa <- add_selected_vr_rects(p_msa, selected_vr_rects)
+
+  p_msa <- p_msa +
     ggplot2::geom_tile(
       data = detailed_backbone_df,
       ggplot2::aes(x = (n_vr + 1) / 2, y = y),
@@ -88,7 +83,11 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, selected_vr,
     ) +
     ggplot2::geom_text(
       data = header_rows,
-      ggplot2::aes(x = vx, y = y_header, label = ifelse(show_star, paste0("*", variable_region_clean), variable_region_clean)),
+      ggplot2::aes(
+        x = vx,
+        y = y_header,
+        label = ifelse(show_star, paste0("*", variable_region_clean), variable_region_clean)
+      ),
       inherit.aes = FALSE,
       color = "black",
       size = 2.8
@@ -104,62 +103,31 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, selected_vr,
     ggplot2::scale_fill_manual(values = tile_palette)
 
   # grouped taxon brackets
-  if (nrow(group_bracket_df) > 0) {
-    p_msa <- p_msa +
-      ggplot2::geom_segment(
-        data = group_bracket_df,
-        ggplot2::aes(y = y_start, yend = y_end),
-        x = bracket_x, xend = bracket_x,
-        inherit.aes = FALSE,
-        color = "red3",
-        linewidth = 0.75,
-        lineend = "round"
-      ) +
-      ggplot2::geom_segment(
-        data = group_bracket_df,
-        ggplot2::aes(y = y_start, yend = y_start),
-        x = bracket_x, xend = bracket_x + bracket_arm,
-        inherit.aes = FALSE,
-        color = "red3",
-        linewidth = 0.75,
-        lineend = "round"
-      ) +
-      ggplot2::geom_segment(
-        data = group_bracket_df,
-        ggplot2::aes(y = y_end, yend = y_end),
-        x = bracket_x, xend = bracket_x + bracket_arm,
-        inherit.aes = FALSE,
-        color = "red3",
-        linewidth = 0.75,
-        lineend = "round"
-      )
-  }
+  p_msa <- add_group_brackets(
+    p = p_msa,
+    group_bracket_df = group_bracket_df,
+    bracket_x = bracket_x,
+    bracket_arm = bracket_arm
+  )
 
   # unique taxon checks
-  if (nrow(unique_taxa_df) > 0) {
-    p_msa <- p_msa +
-      ggplot2::geom_text(
-        data = unique_taxa_df,
-        ggplot2::aes(x = check_x, y = y_lab),
-        label = "✔",
-        inherit.aes = FALSE,
-        color = "green3",
-        size = 4
-      )
-  }
+  p_msa <- add_unique_taxa_checks(
+    p = p_msa,
+    unique_taxa_df = unique_taxa_df,
+    x = check_x,
+    y_col = "y_lab"
+  )
 
   # tile IDs
-  if (isTRUE(vregionIDs)) {
-    p_msa <- p_msa +
-      ggplot2::geom_text(
-        data = RADqtiles,
-        ggplot2::aes(x = vx, y = y + 0.08, label = as.character(seq_id_local)),
-        inherit.aes = FALSE,
-        color = "white",
-        size = 2.5,
-        fontface = "bold"
-      )
-  }
+  p_msa <- add_tile_ids(
+    p = p_msa,
+    data = RADqtiles,
+    label_col = "seq_id_local",
+    x_col = "vx",
+    y_col = "y",
+    enabled = vregionIDs,
+    size = 2.5
+  )
 
   # axes and theme
   p_msa <- p_msa +
@@ -186,7 +154,14 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, selected_vr,
     )
 
   # plot height
-  plot_height <- max(500, 80 + max(detailed_backbone_df$y, 1, na.rm = TRUE) * 18)
+  n_rows <- nrow(detailed_backbone_df)
+  plot_height <- min(
+    1400,
+    max(
+      280,
+      110 + 30 * n_rows
+    )
+  )
 
   # return plot and height
   list(plot = p_msa, plot_height = plot_height)

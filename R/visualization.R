@@ -27,8 +27,6 @@ make_msa_plotly <- function(
 
   # user selected variable regions
   vr_levels_all <- paste0("V", 1:9)
-  selected_vr <- varRegions
-  selected_regions_clean <- varRegions
 
   # standardize and prep shared inputs
   prep <- standardize_plot_inputs(
@@ -39,27 +37,27 @@ make_msa_plotly <- function(
   )
 
   # build the requested plot mode
-  if (isTRUE(detailed)) {
+  built <- if (isTRUE(detailed)) {
     layout_data <- build_species_layout(
       RADqtiles = prep$RADqtiles,
       groups_info = prep$groups_info,
       gap = 2
     )
 
-    built <- build_detailed_plot(
+    build_detailed_plot(
       layout_data = layout_data,
       vr_levels_all = vr_levels_all,
       unique = prep$unique,
-      selected_vr = selected_vr,
+      selected_vr = varRegions,
       vregionIDs = vregionIDs
     )
   } else {
-    built <- build_nondetailed_plot(
+    build_nondetailed_plot(
       unique = prep$unique,
       groups_info = prep$groups_info,
       RADq = prep$RADq,
-      selected_regions_clean = selected_regions_clean,
-      selected_vr = selected_vr,
+      selected_regions_clean = varRegions,
+      selected_vr = varRegions,
       vr_levels_all = vr_levels_all,
       vregionIDs = vregionIDs
     )

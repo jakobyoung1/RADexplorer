@@ -9,10 +9,11 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     dplyr::mutate(
       taxa = as.character(taxa),
       vregion = factor(vregion, levels = vr_levels_all),
-      group = as.character(group)
+      group = as.character(group),
+      vx = match(vregion, vr_levels_all)
     ) |>
     dplyr::group_by(vregion) |>
-    dplyr::mutate(group_id = match(group, unique(group)), vx = match(vregion, vr_levels_all)) |>
+    dplyr::mutate(group_id = match(group, unique(group))) |>
     dplyr::ungroup()
 
   # plotting constants
@@ -30,7 +31,8 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
       dplyr::arrange(group_num, taxa_order) |>
       dplyr::pull(taxa),
     sort(setdiff(unique(groups_plot$taxa), groups_info$taxa))
-  ) |> unique()
+  ) |>
+    unique()
 
   y_map <- tibble::tibble(
     taxa = taxa_levels,
@@ -46,37 +48,27 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
   )
 
   # highlighted variable-region columns
-  selected_vr_rects <- if (nrow(y_map) > 0) {
-    tibble::tibble(vx = match(selected_vr, vr_levels_all)) |>
-      dplyr::filter(!is.na(vx)) |>
-      dplyr::distinct() |>
-      dplyr::transmute(
-        xmin = vx - 0.48,
-        xmax = vx + 0.48,
-        ymin = min(header_rows$y_header) - 0.1,
-        ymax = max(y_map$y) + 0.8
-      )
-  } else {
-    tibble::tibble(xmin = numeric(), xmax = numeric(), ymin = numeric(), ymax = numeric())
-  }
+  selected_vr_rects <- build_selected_vr_rects(
+    selected_vr = selected_vr,
+    vr_levels_all = vr_levels_all,
+    ymin = min(header_rows$y_header) - 0.1,
+    ymax = max(y_map$y) + 0.8
+  )
 
   # axis label data
   y_breaks <- y_map |>
     dplyr::left_join(
-      RADq |>
-        dplyr::distinct(species, copy_id) |>
-        dplyr::group_by(species) |>
-        dplyr::mutate(copy_num = dplyr::dense_rank(copy_id)) |>
-        dplyr::ungroup() |>
-        dplyr::distinct(taxa = species, copy_num) |>
-        dplyr::count(taxa, name = "n_copies"),
+      count_species_copies(RADq),
       by = "taxa"
     ) |>
     dplyr::mutate(n_copies = tidyr::replace_na(n_copies, 0))
 
   # grouped taxon brackets
   group_summary <- y_map |>
-    dplyr::left_join(dplyr::select(groups_info, taxa, group, group_label), by = "taxa") |>
+    dplyr::left_join(
+      dplyr::select(groups_info, taxa, group, group_label),
+      by = "taxa"
+    ) |>
     dplyr::add_count(group, name = "n_taxa")
 
   group_bracket_df <- group_summary |>
@@ -94,15 +86,11 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     dplyr::distinct(taxa, y)
 
   # base plot
-  p_msa <- ggplot2::ggplot() +
-    ggplot2::geom_rect(
-      data = selected_vr_rects,
-      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-      inherit.aes = FALSE,
-      fill = "gold",
-      alpha = 0.75,
-      color = NA
-    ) +
+  p_msa <- ggplot2::ggplot()
+
+  p_msa <- add_selected_vr_rects(p_msa, selected_vr_rects)
+
+  p_msa <- p_msa +
     ggplot2::geom_text(
       data = header_rows,
       ggplot2::aes(x = vx, y = y_header + 0.25, label = vregion),
@@ -122,68 +110,37 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
       data = groups_plot,
       ggplot2::aes(x = vx, y = y, fill = factor(group_id)),
       width = tile_w,
-      height = 1.5,
+      height = 1,
       color = "black",
       linewidth = 0.35
     )
 
   # grouped taxon brackets
-  if (nrow(group_bracket_df) > 0) {
-    p_msa <- p_msa +
-      ggplot2::geom_segment(
-        data = group_bracket_df,
-        ggplot2::aes(y = y_start, yend = y_end),
-        x = bracket_x, xend = bracket_x,
-        inherit.aes = FALSE,
-        color = "red3",
-        linewidth = 0.75,
-        lineend = "round"
-      ) +
-      ggplot2::geom_segment(
-        data = group_bracket_df,
-        ggplot2::aes(y = y_start, yend = y_start),
-        x = bracket_x, xend = bracket_x + bracket_arm,
-        inherit.aes = FALSE,
-        color = "red3",
-        linewidth = 0.75,
-        lineend = "round"
-      ) +
-      ggplot2::geom_segment(
-        data = group_bracket_df,
-        ggplot2::aes(y = y_end, yend = y_end),
-        x = bracket_x, xend = bracket_x + bracket_arm,
-        inherit.aes = FALSE,
-        color = "red3",
-        linewidth = 0.75,
-        lineend = "round"
-      )
-  }
+  p_msa <- add_group_brackets(
+    p = p_msa,
+    group_bracket_df = group_bracket_df,
+    bracket_x = bracket_x,
+    bracket_arm = bracket_arm
+  )
 
   # unique taxon checks
-  if (nrow(unique_taxa_df) > 0) {
-    p_msa <- p_msa +
-      ggplot2::geom_text(
-        data = unique_taxa_df,
-        ggplot2::aes(x = check_x, y = y),
-        label = "✔",
-        inherit.aes = FALSE,
-        color = "green3",
-        size = 4
-      )
-  }
+  p_msa <- add_unique_taxa_checks(
+    p = p_msa,
+    unique_taxa_df = unique_taxa_df,
+    x = check_x,
+    y_col = "y"
+  )
 
   # tile IDs
-  if (isTRUE(vregionIDs)) {
-    p_msa <- p_msa +
-      ggplot2::geom_text(
-        data = groups_plot,
-        ggplot2::aes(x = vx, y = y + 0.08, label = group_id),
-        inherit.aes = FALSE,
-        color = "white",
-        size = 2.8,
-        fontface = "bold"
-      )
-  }
+  p_msa <- add_tile_ids(
+    p = p_msa,
+    data = groups_plot,
+    label_col = "group_id",
+    x_col = "vx",
+    y_col = "y",
+    enabled = vregionIDs,
+    size = 2.8
+  )
 
   # axes and theme
   p_msa <- p_msa +
@@ -211,7 +168,15 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     ggplot2::labs(x = NULL, y = NULL)
 
   # plot height
-  plot_height <- max(200, 120 + max(y_map$y) * 32)
+  # plot height
+  n_taxa <- nrow(y_map)
+  plot_height <- min(
+    1400,
+    max(
+      320,
+      110 + 60 * n_taxa
+    )
+  )
 
   # return plot and height
   list(plot = p_msa, plot_height = plot_height)

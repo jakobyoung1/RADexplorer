@@ -125,14 +125,14 @@ app_server <- function(input, output, session) {
   # note under the taxa selector
   output$speciesNote <- shiny::renderUI({
     n_selected <- length(input$selectTaxa %||% character(0))
-    estimated_time <- as.character(n_selected * 3.58 + 6)
+    estimated_time <- n_selected * 3.58 + 6
 
     shiny::HTML(paste0(
       "<p><i>You have selected ",
       n_selected,
       " taxa. Estimated processing time: ",
-      estimated_time,
-      " seconds.",
+      ifelse(estimated_time>=60, as.character(round(estimated_time/60), 2), ifelse(n_selected>0, as.character(estimated_time), 0)),
+      ifelse(estimated_time<60, " seconds.", " minutes."),
       "</i></p>"
     ))
   })
@@ -177,16 +177,26 @@ app_server <- function(input, output, session) {
 
   # updates selected variable regions
   shiny::observeEvent(input$varRegions, {
-    selected_vregions(input$varRegions)
-    RADqGroups(RADalign::createRADqGroups(selected_vregions(), TRUE))
-    print(RADqGroups())
+    shiny::req(RADq(), uniqueRADq())
 
-    ########## THIS IS WHERE WE SEND THE SELECTED TAXA TO RADALIGN AND RECIEVE RADq ############
-    # RADq(RADalign::selectVRegions(selected_vregions(), TRUE))
-    ##########                                                                      ############
-  })
+    vr <- input$varRegions %||% character(0)
+    selected_vregions(vr)
 
-  # deselects all variable regions
+    if (length(vr) == 0) {
+      RADqGroups(RADalign::createRADqGroups(paste0("V", 1:9), TRUE))
+      return()
+    }
+
+    new_groups <- tryCatch(
+      RADalign::createRADqGroups(vr, TRUE),
+      error = function(e) NULL
+    )
+
+    if (!is.null(new_groups) && nrow(new_groups) > 0) {
+      RADqGroups(new_groups)
+    }
+  }, ignoreNULL = FALSE)
+
   shiny::observeEvent(input$deselectVarRegions, {
     shiny::updateCheckboxGroupInput(
       session,
@@ -314,23 +324,21 @@ app_server <- function(input, output, session) {
   # plot rendering
 
   # rebuilds the plot when relevant controls change
-  msa_plot <- shiny::eventReactive(
-    list(input$continueWithTaxa, input$varRegions, input$detailedView, input$vregionIDs),
-    {
-      shiny::req(RADq(), uniqueRADq(), RADqGroups())
+  msa_plot <- shiny::reactive({
+    selected_vregions()
+    input$continueWithTaxa
+    input$detailedView
+    input$vregionIDs
 
-      print(RADq())
-
-      make_msa_plotly(
-        RADq = RADq(),
-        unique = uniqueRADq(),
-        groups = RADqGroups(),
-        varRegions = selected_vregions(),
-        detailed = input$detailedView,
-        vregionIDs = input$vregionIDs
-      )
-    }
-  )
+    make_msa_plotly(
+      RADq = RADq(),
+      unique = uniqueRADq(),
+      groups = RADqGroups(),
+      varRegions = selected_vregions(),
+      detailed = input$detailedView,
+      vregionIDs = input$vregionIDs
+    )
+  })
 
   # sends the plotly object to the UI
   output$visual <- plotly::renderPlotly({

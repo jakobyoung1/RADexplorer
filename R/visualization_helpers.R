@@ -62,8 +62,6 @@ standardize_plot_inputs <- function(RADq, unique, groups, varRegions) {
   )
 }
 
-
-
 #' Build the species_layout dataframe for the visualization
 #'
 #' @param RADqtiles
@@ -83,7 +81,8 @@ build_species_layout <- function(RADqtiles, groups_info, gap = 2) {
       dplyr::arrange(group_num, taxa_order) |>
       dplyr::pull(taxa),
     sort(setdiff(unique(RADqtiles$species), groups_info$taxa))
-  ) |> unique()
+  ) |>
+    unique()
 
   # creates species_counts, a copy of the RADqtiles df with a column with the number of gene copies per species
   species_counts <- RADqtiles |>
@@ -172,7 +171,6 @@ build_species_layout <- function(RADqtiles, groups_info, gap = 2) {
 #' @param n_copies List of number of copies
 #'
 #' @return a list containing species labels for the y axis
-#'
 #' @export
 #'
 make_species_axis_labels <- function(species, n_copies) {
@@ -242,5 +240,125 @@ make_plotly_layout <- function(p_msa, plot_height) {
       ),
       plot_bgcolor = "white",
       paper_bgcolor = "white"
+    )
+}
+
+build_tile_palette <- function(seq_id) {
+  tile_levels <- sort(unique(substring(seq_id, 3)))
+  tile_palette <- grDevices::hcl(
+    h = seq(15, 375, length.out = length(tile_levels) + 1)[seq_along(tile_levels)],
+    c = 100,
+    l = 65
+  )
+  names(tile_palette) <- tile_levels
+  tile_palette
+}
+
+build_selected_vr_rects <- function(selected_vr, vr_levels_all, ymin, ymax) {
+  tibble::tibble(vx = match(selected_vr, vr_levels_all)) |>
+    dplyr::filter(!is.na(vx)) |>
+    dplyr::distinct() |>
+    dplyr::transmute(
+      xmin = vx - 0.48,
+      xmax = vx + 0.48,
+      ymin = ymin,
+      ymax = ymax
+    )
+}
+
+count_species_copies <- function(RADq) {
+  RADq |>
+    dplyr::distinct(species, copy_id) |>
+    dplyr::group_by(species) |>
+    dplyr::mutate(copy_num = dplyr::dense_rank(copy_id)) |>
+    dplyr::ungroup() |>
+    dplyr::distinct(taxa = species, copy_num) |>
+    dplyr::count(taxa, name = "n_copies")
+}
+
+add_selected_vr_rects <- function(p, selected_vr_rects) {
+  if (nrow(selected_vr_rects) == 0) {
+    return(p)
+  }
+
+  p +
+    ggplot2::geom_rect(
+      data = selected_vr_rects,
+      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      inherit.aes = FALSE,
+      fill = "gold",
+      alpha = 0.75,
+      color = NA
+    )
+}
+
+add_group_brackets <- function(p, group_bracket_df, bracket_x, bracket_arm) {
+  if (nrow(group_bracket_df) == 0) {
+    return(p)
+  }
+
+  p +
+    ggplot2::geom_segment(
+      data = group_bracket_df,
+      ggplot2::aes(y = y_start, yend = y_end),
+      x = bracket_x, xend = bracket_x,
+      inherit.aes = FALSE,
+      color = "red3",
+      linewidth = 0.75,
+      lineend = "round"
+    ) +
+    ggplot2::geom_segment(
+      data = group_bracket_df,
+      ggplot2::aes(y = y_start, yend = y_start),
+      x = bracket_x, xend = bracket_x + bracket_arm,
+      inherit.aes = FALSE,
+      color = "red3",
+      linewidth = 0.75,
+      lineend = "round"
+    ) +
+    ggplot2::geom_segment(
+      data = group_bracket_df,
+      ggplot2::aes(y = y_end, yend = y_end),
+      x = bracket_x, xend = bracket_x + bracket_arm,
+      inherit.aes = FALSE,
+      color = "red3",
+      linewidth = 0.75,
+      lineend = "round"
+    )
+}
+
+add_unique_taxa_checks <- function(p, unique_taxa_df, x, y_col) {
+  if (nrow(unique_taxa_df) == 0) {
+    return(p)
+  }
+
+  p +
+    ggplot2::geom_text(
+      data = unique_taxa_df,
+      ggplot2::aes(x = x, y = .data[[y_col]]),
+      label = "✔",
+      inherit.aes = FALSE,
+      color = "green3",
+      size = 4
+    )
+}
+
+add_tile_ids <- function(p, data, label_col, x_col, y_col, enabled, size) {
+  if (!isTRUE(enabled)) {
+    return(p)
+  }
+
+  p +
+    ggplot2::geom_text(
+      data = data,
+      ggplot2::aes(
+        x = .data[[x_col]],
+        y = .data[[y_col]] + 0.08,
+        label = as.character(.data[[label_col]])
+      ),
+      inherit.aes = FALSE,
+      color = "white",
+      size = size,
+      fontface = "bold"
     )
 }
