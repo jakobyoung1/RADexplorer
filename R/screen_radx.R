@@ -29,20 +29,25 @@ radx_screen_ui <- function() {
         shiny::actionButton("backToMenu", "Back", style = "flex:1;")
       )
     ),
-    bslib::card(
-      p(
-        "All 16S rRNA gene copies for the selected taxa are shown below. ",
-        "Within each v-region column, color represents identical sequences. ",
-        "Select v-regions (left sidebar) for analysis. ",
-        "A green checkmark next to a taxon means it can be identified using the selected v-region(s). ",
-        "Taxa within a red bracket cannot be distinguished from eachother with the selected v-region(s). "
-      ),
-      bslib::card(
-        shiny::conditionalPanel(
-          "input.continueWithTaxa > 0",
-          plotly::plotlyOutput("visual", height = "650px")
+    bslib::accordion(
+      id = "radx_instructions",
+      open = TRUE,
+      bslib::accordion_panel(
+        "RADx Instructions",
+        p(
+          "Select v-regions on the left sidebar. ",
+          "A green checkmark next to a taxon means it can be identified using the selected v-region(s). ",
+          "Taxa within a red bracket cannot be distinguished from one another via the selected v-region(s). "
+        ),
+        tags$small(
+          style = "display:block; font-style:italic; margin-top:-8px; margin-bottom:12px;",
+          "Note: Colors designate identical sequences within a v-region. Colors should not be compared across columns."
         )
       )
+    ),
+    shiny::conditionalPanel(
+      "input.continueWithTaxa > 0",
+      plotly::plotlyOutput("visual", height = "650px")
     )
   )
 }

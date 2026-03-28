@@ -51,13 +51,12 @@ menu_screen_ui <- function() {
                 ),
                 width = "100%"
               )
-            ),
-            div(
-              style = "font-size:13px; margin-top:-6px;",
-              shiny::uiOutput("speciesNote")
             )
           ),
-
+          div(
+            style = "font-size:13px; margin-top:-12px;",
+            shiny::uiOutput("speciesNote")
+          ),
           div(
             style = "display:flex; gap:12px; width:100%;",
             shiny::actionButton("download", "Export RAD Databases", style = "flex:1;"),

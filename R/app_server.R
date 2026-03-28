@@ -127,14 +127,21 @@ app_server <- function(input, output, session) {
     n_selected <- length(input$selectTaxa %||% character(0))
     estimated_time <- n_selected * 3.58 + 6
 
-    shiny::HTML(paste0(
-      "<p><i>You have selected ",
-      n_selected,
-      " taxa. Estimated processing time: ",
-      ifelse(estimated_time>=60, as.character(round(estimated_time/60), 2), ifelse(n_selected>0, as.character(estimated_time), 0)),
-      ifelse(estimated_time<60, " seconds.", " minutes."),
-      "</i></p>"
-    ))
+    tags$div(
+      style = "margin:0; padding:0;",
+      tags$i(
+        paste0(
+          "You have selected ", n_selected,
+          " taxa. Estimated processing time: ",
+          ifelse(
+            estimated_time >= 60,
+            round(estimated_time / 60, 2),
+            ifelse(n_selected > 0, estimated_time, 0)
+          ),
+          ifelse(estimated_time < 60, " seconds.", " minutes.")
+        )
+      )
+    )
   })
 
   # stores selected taxa
