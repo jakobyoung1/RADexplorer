@@ -303,7 +303,7 @@ add_group_brackets <- function(p, group_bracket_df, bracket_x, bracket_arm) {
       ggplot2::aes(y = y_start, yend = y_end),
       x = bracket_x, xend = bracket_x,
       inherit.aes = FALSE,
-      color = "red3",
+      color = "red",
       linewidth = 0.75,
       lineend = "round"
     ) +
@@ -312,7 +312,7 @@ add_group_brackets <- function(p, group_bracket_df, bracket_x, bracket_arm) {
       ggplot2::aes(y = y_start, yend = y_start),
       x = bracket_x, xend = bracket_x + bracket_arm,
       inherit.aes = FALSE,
-      color = "red3",
+      color = "red",
       linewidth = 0.75,
       lineend = "round"
     ) +
@@ -321,7 +321,7 @@ add_group_brackets <- function(p, group_bracket_df, bracket_x, bracket_arm) {
       ggplot2::aes(y = y_end, yend = y_end),
       x = bracket_x, xend = bracket_x + bracket_arm,
       inherit.aes = FALSE,
-      color = "red3",
+      color = "red",
       linewidth = 0.75,
       lineend = "round"
     )

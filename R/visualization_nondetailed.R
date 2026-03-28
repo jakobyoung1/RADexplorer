@@ -17,7 +17,7 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     dplyr::ungroup()
 
   # plotting constants
-  gap <- 1.5
+  gap <- 1
   n_vr <- length(vr_levels_all)
   tile_w <- 0.7
   bracket_x <- 0.28
@@ -167,7 +167,6 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     ) +
     ggplot2::labs(x = NULL, y = NULL)
 
-  # plot height
   # plot height
   n_taxa <- nrow(y_map)
   plot_height <- min(

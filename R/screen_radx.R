@@ -35,13 +35,17 @@ radx_screen_ui <- function() {
       bslib::accordion_panel(
         "RADx Instructions",
         p(
-          "Select v-regions on the left sidebar. ",
-          "A green checkmark next to a taxon means it can be distinguished from the other taxa via the selected v-region(s). ",
-          "Taxa grouped within a red bracket cannot be distinguished from one another via the selected v-region(s). "
-        ),
-        tags$small(
-          style = "display:block; font-style:italic; margin-top:-8px; margin-bottom:12px;",
-          "Note: Colors designate identical sequences within a v-region. Colors should not be compared across columns."
+          "Select the 16S rRNA gene variable regions you wish to study in the left sidebar.",
+          tags$br(),
+          "A green checkmark (",
+          span("✓", style = "color: green; font-weight: bold;"),
+          ") below indicates that a taxon can be identified using the selected v-region(s), while taxa grouped within a red bracket (",
+          span("[", style = "color: red; font-weight: bold;"),
+          ") cannot be distinguished from one another. ",
+          tags$small(
+            style = "display:block; font-style:italic; margin-top:8px; margin-bottom:12px;",
+            "Note: Colors designate identical sequences within a v-region. Colors should not be compared across columns."
+          )
         )
       )
     ),
