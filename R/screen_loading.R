@@ -9,7 +9,7 @@ loading_screen_ui <- function() {
         flex-direction:column;
         gap:16px;
       ",
-      h3("Loading RADexplorer..."),
+      h3("Loading RADx..."),
       div(class = "spinner-border", role = "status"),
       p("Performing multiple sequence alignments and building visualization...")
     )
