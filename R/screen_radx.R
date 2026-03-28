@@ -6,7 +6,7 @@ radx_screen_ui <- function() {
       # variable region select
       shiny::checkboxGroupInput(
         "varRegions",
-        "Select v-regions for analysis:",
+        "Select v-regions:",
         choices = paste0("V", 1:9),
         selected = c("V4")
       ),
@@ -36,8 +36,8 @@ radx_screen_ui <- function() {
         "RADx Instructions",
         p(
           "Select v-regions on the left sidebar. ",
-          "A green checkmark next to a taxon means it can be identified using the selected v-region(s). ",
-          "Taxa within a red bracket cannot be distinguished from one another via the selected v-region(s). "
+          "A green checkmark next to a taxon means it can be distinguished from the other taxa via the selected v-region(s). ",
+          "Taxa grouped within a red bracket cannot be distinguished from one another via the selected v-region(s). "
         ),
         tags$small(
           style = "display:block; font-style:italic; margin-top:-8px; margin-bottom:12px;",

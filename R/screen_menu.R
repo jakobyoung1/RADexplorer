@@ -1,13 +1,8 @@
-#' Main RADexplorer menu UI
-#'
-#' Creates the main menu page for selecting taxa and launching analysis.
-#'
-#' @return A Shiny UI object.
-#' @export
 menu_screen_ui <- function() {
   bslib::page_fillable(
     title = "RADexplorer",
     shinyjs::useShinyjs(),
+    fillable = FALSE,
     div(
       style = "display:flex; align-items:flex-start; justify-content:center; padding-top:100px; padding-bottom:100px; overflow:visible;",
       bslib::card(
@@ -35,38 +30,31 @@ menu_screen_ui <- function() {
 
           bslib::card(
             style = "overflow:visible;",
-            div(
-              style = "overflow:visible;",
-              shiny::selectizeInput(
-                "selectTaxa",
-                "Select species to analyze:",
-                choices = NULL,
-                multiple = TRUE,
-                options = list(
-                  placeholder = "Type to search",
-                  maxOptions = 1000,
-                  closeAfterSelect = FALSE,
-                  hideSelected = FALSE,
-                  openOnFocus = TRUE,
-                  dropdownParent = "body",
-                  render = I("{
-                    option: function(item, escape) {
-                      var label = item.label || item.text || '';
-                      if (label.match(/ - All Species$/)) {
-                        return '<div style=\"padding:2px 12px;\"><strong>' + escape(label) + '</strong></div>';
-                      }
-                      return '<div style=\"padding:2px 12px;\">' + escape(label) + '</div>';
-                    }
-                  }")
-                ),
-                width = "100%"
+            shinyWidgets::pickerInput(
+              inputId = "selectTaxa",
+              label = "Select species to analyze:",
+              choices = NULL,
+              multiple = TRUE,
+              width = "100%",
+              options = shinyWidgets::pickerOptions(
+                `live-search` = TRUE,
+                `live-search-style` = "startsWith",
+                `actions-box` = FALSE,
+                `selected-text-format` = "count > 8",
+                `live-search-placeholder` = "Type to search",
+                `none-selected-text` = "Type to search",
+                size = 10,
+                `dropup-auto` = FALSE,
+                container = "body"
               )
             )
           ),
+
           div(
             style = "font-size:13px; margin-top:-12px;",
             shiny::uiOutput("speciesNote")
           ),
+
           div(
             style = "display:flex; gap:12px; width:100%;",
             shiny::actionButton("download", "Export RAD Databases", style = "flex:1;"),

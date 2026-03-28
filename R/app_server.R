@@ -22,9 +22,6 @@ app_server <- function(input, output, session) {
   genus_species <- trimws(genus_species)
   genus_species <- genus_species[nzchar(genus_species)]
 
-  # full taxa list
-  all_organisms <- sort(unique(RADalign::get_all_organisms()))
-
   # current screen
   screen <- shiny::reactiveVal("menu")
 
@@ -45,9 +42,6 @@ app_server <- function(input, output, session) {
 
   # loading flag
   loading <- shiny::reactiveVal(FALSE)
-
-  #########################################################################
-  # helper functions
 
   # updates the italic label for whole-genus filtering
   update_entire_genus_label <- function(checkbox_id, n_genera, n_members, mode = c("analyze", "filter")) {
@@ -103,28 +97,32 @@ app_server <- function(input, output, session) {
     }
   }
 
-  #########################################################################
-  # menu screen setup
+  # helper to get all species from selected genera
+  get_species_from_genera <- function(selected_genera) {
+    selected_genera <- selected_genera %||% character(0)
+    if (length(selected_genera) == 0) {
+      return(character(0))
+    }
+
+    genus_lookup <- sub(" .*$", "", genus_species)
+    sort(genus_species[genus_lookup %in% selected_genera])
+  }
 
   # reloads the taxa dropdown whenever user returns to the menu
   shiny::observeEvent(screen(), {
     shiny::req(screen() == "menu")
 
-    shiny::updateSelectizeInput(
-      session,
-      "selectTaxa",
-      choices = all_organisms,
-      selected = selected_taxa(),
-      server = TRUE
+    shinyWidgets::updatePickerInput(
+      session = session,
+      inputId = "selectTaxa",
+      choices = sort(unique(RADalign::get_all_organisms())),
+      selected = selected_taxa()
     )
   }, ignoreInit = FALSE)
 
-  #########################################################################
-  # main taxa selection screen
-
   # note under the taxa selector
   output$speciesNote <- shiny::renderUI({
-    n_selected <- length(input$selectTaxa %||% character(0))
+    n_selected <- length(selected_taxa() %||% character(0))
     estimated_time <- n_selected * 3.58 + 6
 
     tags$div(
@@ -156,13 +154,10 @@ app_server <- function(input, output, session) {
 
   # enables buttons only when taxa are selected
   shiny::observe({
-    ok <- length(input$selectTaxa %||% character(0)) > 0
+    ok <- length(selected_taxa() %||% character(0)) > 0
     shinyjs::toggleState("download", condition = ok)
     shinyjs::toggleState("continueWithTaxa", condition = ok)
   })
-
-  #########################################################################
-  # RADx flow
 
   shiny::observeEvent(input$continueWithTaxa, {
     taxa_now <- isolate(selected_taxa())
@@ -211,9 +206,6 @@ app_server <- function(input, output, session) {
     )
   })
 
-  #########################################################################
-  # screen navigation
-
   # back to main menu
   shiny::observeEvent(input$backToMenu, {
     screen("menu")
@@ -239,9 +231,6 @@ app_server <- function(input, output, session) {
   shiny::observeEvent(input$metascopeInstructionsButton, {
     screen("metascopeInstructions")
   })
-
-  #########################################################################
-  # MetaScope screen logic
 
   # enables/disables the filter card
   shiny::observe({
@@ -291,7 +280,6 @@ app_server <- function(input, output, session) {
 
   # exports selected RAD databases
   shiny::observeEvent(input$port, {
-    ########## THIS IS WHERE WE DOWNLOAD THE FILES FOR PORTING TO OTHER PIPELINES ############
     if (download_pipeline() == "metascope") {
       if (length(input$selectTaxaFilter %||% character(0)) != 0) {
         RADalign::download_RAD_data("MetaScope", selected_taxa(), selected_taxa_metascope_filter())
@@ -303,11 +291,7 @@ app_server <- function(input, output, session) {
     } else if (download_pipeline() == "qiime2") {
 
     }
-    ##########                                                                    ############
   })
-
-  #########################################################################
-  # screen rendering
 
   # chooses which page to show
   output$page <- shiny::renderUI({
@@ -325,9 +309,6 @@ app_server <- function(input, output, session) {
       metascope_instructions_ui()
     }
   })
-
-  #########################################################################
-  # plot rendering
 
   # rebuilds the plot when relevant controls change
   msa_plot <- shiny::reactive({
