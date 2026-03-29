@@ -14,13 +14,16 @@ app_server <- function(input, output, session) {
   shiny::addResourcePath("app", base_dir)
 
   # dropdown support files
-  genus <- readLines(file.path(base_dir, "taxa", "genus.txt"), warn = FALSE)
-  genus <- trimws(genus)
-  genus <- genus[nzchar(genus)]
-
-  genus_species <- readLines(file.path(base_dir, "taxa", "Genusspecies.txt"), warn = FALSE)
-  genus_species <- trimws(genus_species)
-  genus_species <- genus_species[nzchar(genus_species)]
+  accessions_table <- RADalign::get_accessions_df()
+  genus <- accessions_table[["genus"]]
+  # genus <- readLines(file.path(base_dir, "taxa", "genus.txt"), warn = FALSE)
+  # genus <- trimws(genus)
+  # genus <- genus[nzchar(genus)]
+  
+  genus_species <- accessions_table[["organism"]]
+  # genus_species <- readLines(file.path(base_dir, "taxa", "Genusspecies.txt"), warn = FALSE)
+  # genus_species <- trimws(genus_species)
+  # genus_species <- genus_species[nzchar(genus_species)]
 
   # current screen
   screen <- shiny::reactiveVal("menu")
@@ -98,14 +101,19 @@ app_server <- function(input, output, session) {
   }
 
   # helper to get all species from selected genera
-  get_species_from_genera <- function(selected_genera) {
-    selected_genera <- selected_genera %||% character(0)
+  get_species_from_genera <- function(selected_genera = character(0)) { # Setting default in arg declaration
     if (length(selected_genera) == 0) {
       return(character(0))
     }
-
-    genus_lookup <- sub(" .*$", "", genus_species)
-    sort(genus_species[genus_lookup %in% selected_genera])
+    
+    accessions_table |>
+      (function(x) x[accessions_table[["genus"]] == selected_genera])() |>
+      (function(x) x[["organism"]])() |>
+      unique() |>
+      sort()
+    # genus_lookup <- sub(" .*$", "", genus_species)
+    # sort(genus_species[genus_lookup %in% 
+    #                      selected_genera])
   }
 
   # reloads the taxa dropdown whenever user returns to the menu
