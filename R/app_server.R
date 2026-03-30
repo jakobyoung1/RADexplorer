@@ -340,7 +340,6 @@ app_server <- function(input, output, session) {
   }
 
 
-
   # helper to update whole-genus checkbox labels
   update_entire_genus_label <- function(checkbox_id, n_genera, n_members, mode = c("analyze", "filter")) {
     mode <- match.arg(mode)
