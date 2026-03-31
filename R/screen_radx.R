@@ -41,8 +41,7 @@ radx_screen_ui <- function() {
           `dropup-auto` = FALSE,
           container = "body"
         )
-      ),
-      shiny::actionButton("searchTaxa", "Locate", style = "width:100%;margin-bottom:10px;")
+      )
     ),
 
     # app styles

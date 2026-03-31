@@ -153,7 +153,7 @@ app_server <- function(input, output, session) {
   })
 
   # apply RADx search
-  shiny::observeEvent(input$searchTaxa, {
+  shiny::observeEvent(input$radxSearchTaxa, {
     shiny::req(RADqGroups())
 
     all_taxa_now <- sort(unique(expand_selected_taxa(selected_taxa())))
@@ -232,7 +232,7 @@ app_server <- function(input, output, session) {
     input$continueWithTaxa
     input$detailedView
     input$vregionIDs
-    input$searchTaxa
+    input$radxSearchTaxa
 
     display_taxa <- radx_search_display_taxa()
     if (length(display_taxa) == 0) {
