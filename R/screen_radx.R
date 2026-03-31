@@ -18,8 +18,8 @@ radx_screen_ui <- function() {
         )
       ),
       shiny::div(
-        style = "margin:-16px 0 8px;font-size:12px;",
-        shiny::actionButton("deselectVarRegions", "Deselect all v-regions")
+        style = "margin:-16px 0 8px;font-size:8px;",
+        shiny::actionButton("deselectVarRegions", "Deselect all")
       ),
 
       # display options
