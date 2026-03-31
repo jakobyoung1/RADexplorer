@@ -7,7 +7,7 @@
 #' @param groups Data frame of taxa grouping information.
 #' @param varRegions List of the user-selected variable regions
 #'
-#' @return a list containing the standardized RADq, unique, groups, and RADqtiles, groups_info dfs
+#' @return a list containing the standardized unique, RADqtiles, groups_info, and copy_counts
 #'
 #' @export
 #'
@@ -53,12 +53,17 @@ standardize_plot_inputs <- function(RADq, unique, groups, varRegions) {
       group_label = paste0("Group ", group_num)
     )
 
+  # copy counts per taxa, derived from RADqtiles
+  copy_counts <- RADqtiles |>
+    dplyr::distinct(species, copy_num) |>
+    dplyr::count(species, name = "n_copies") |>
+    dplyr::rename(taxa = species)
+
   list(
-    RADq = RADq,
     unique = unique,
-    groups = groups,
     RADqtiles = RADqtiles,
-    groups_info = groups_info
+    groups_info = groups_info,
+    copy_counts = copy_counts
   )
 }
 
@@ -173,11 +178,21 @@ build_species_layout <- function(RADqtiles, groups_info, gap = 2) {
 #' @return a list containing species labels for the y axis
 #' @export
 #'
-make_species_axis_labels <- function(species, n_copies) {
+make_species_axis_labels <- function(species, n_copies, searched_taxa = character(0)) {
 
-  # species name plus copy count label
+  searched_taxa <- searched_taxa %||% character(0)
+
+  arrow <- "<span style='font-size:18pt; color:#00dfeb; font-weight:650; position:relative; top:8px;'>\u27A4  </span>"
+
+  species_label <- paste0(
+    ifelse(species %in% searched_taxa, arrow, ""),
+    "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>",
+    species,
+    "</i></span>"
+  )
+
   paste0(
-    "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>", species, "</i></span>",
+    species_label,
     "<br><span style='font-size:8pt; line-height:1.1;'>",
     n_copies,
     " 16S rRNA gene cop",
@@ -198,6 +213,7 @@ make_plotly_layout <- function(p_msa, plot_height) {
 
   # final plotly layout
   plotly::ggplotly(p_msa, tooltip = c("text", "seq_id")) |>
+    plotly::config(displayModeBar = FALSE) |>
     plotly::layout(
       margin = list(l = 120, r = 30, t = 40, b = 20),
       height = plot_height,
@@ -243,13 +259,20 @@ make_plotly_layout <- function(p_msa, plot_height) {
     )
 }
 
-build_tile_palette <- function(seq_id) {
-  tile_levels <- sort(unique(substring(seq_id, 3)))
+build_tile_palette <- function(ids, seed = NULL) {
+  tile_levels <- sort(unique(as.character(ids)))
+
   tile_palette <- grDevices::hcl(
     h = seq(15, 375, length.out = length(tile_levels) + 1)[seq_along(tile_levels)],
     c = 100,
     l = 65
   )
+
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
+
+  tile_palette <- sample(tile_palette)
   names(tile_palette) <- tile_levels
   tile_palette
 }
@@ -264,16 +287,6 @@ build_selected_vr_rects <- function(selected_vr, vr_levels_all, ymin, ymax) {
       ymin = ymin,
       ymax = ymax
     )
-}
-
-count_species_copies <- function(RADq) {
-  RADq |>
-    dplyr::distinct(species, copy_id) |>
-    dplyr::group_by(species) |>
-    dplyr::mutate(copy_num = dplyr::dense_rank(copy_id)) |>
-    dplyr::ungroup() |>
-    dplyr::distinct(taxa = species, copy_num) |>
-    dplyr::count(taxa, name = "n_copies")
 }
 
 add_selected_vr_rects <- function(p, selected_vr_rects) {
@@ -303,7 +316,7 @@ add_group_brackets <- function(p, group_bracket_df, bracket_x, bracket_arm) {
       ggplot2::aes(y = y_start, yend = y_end),
       x = bracket_x, xend = bracket_x,
       inherit.aes = FALSE,
-      color = "red3",
+      color = "red",
       linewidth = 0.75,
       lineend = "round"
     ) +
@@ -312,7 +325,7 @@ add_group_brackets <- function(p, group_bracket_df, bracket_x, bracket_arm) {
       ggplot2::aes(y = y_start, yend = y_start),
       x = bracket_x, xend = bracket_x + bracket_arm,
       inherit.aes = FALSE,
-      color = "red3",
+      color = "red",
       linewidth = 0.75,
       lineend = "round"
     ) +
@@ -321,7 +334,7 @@ add_group_brackets <- function(p, group_bracket_df, bracket_x, bracket_arm) {
       ggplot2::aes(y = y_end, yend = y_end),
       x = bracket_x, xend = bracket_x + bracket_arm,
       inherit.aes = FALSE,
-      color = "red3",
+      color = "red",
       linewidth = 0.75,
       lineend = "round"
     )
@@ -336,7 +349,7 @@ add_unique_taxa_checks <- function(p, unique_taxa_df, x, y_col) {
     ggplot2::geom_text(
       data = unique_taxa_df,
       ggplot2::aes(x = x, y = .data[[y_col]]),
-      label = "✔",
+      label = "\u2714",
       inherit.aes = FALSE,
       color = "green3",
       size = 4

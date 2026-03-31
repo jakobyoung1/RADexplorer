@@ -20,8 +20,9 @@ make_msa_plotly <- function(
     groups,
     varRegions = c("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9"),
     highlight_unique = FALSE,
-    detailed = TRUE,
+    detailed = FALSE,
     vregionIDs = FALSE,
+    searched_taxa = character(0),
     package = "RADexplorer"
 ) {
 
@@ -49,17 +50,18 @@ make_msa_plotly <- function(
       vr_levels_all = vr_levels_all,
       unique = prep$unique,
       selected_vr = varRegions,
-      vregionIDs = vregionIDs
+      vregionIDs = vregionIDs,
+      searched_taxa = searched_taxa
     )
   } else {
     build_nondetailed_plot(
       unique = prep$unique,
       groups_info = prep$groups_info,
-      RADq = prep$RADq,
-      selected_regions_clean = varRegions,
+      copy_counts = prep$copy_counts,
       selected_vr = varRegions,
       vr_levels_all = vr_levels_all,
-      vregionIDs = vregionIDs
+      vregionIDs = vregionIDs,
+      searched_taxa = searched_taxa
     )
   }
 

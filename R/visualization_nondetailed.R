@@ -1,6 +1,14 @@
 # helper for non-detailed RADexplorer plot
 
-build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_clean, selected_vr, vr_levels_all, vregionIDs = FALSE) {
+build_nondetailed_plot <- function(
+    unique,
+    groups_info,
+    copy_counts,
+    selected_vr,
+    vr_levels_all,
+    vregionIDs = FALSE,
+    searched_taxa = character(0)
+) {
 
   # plotting inputs
   groups_plot <- unique |>
@@ -23,6 +31,9 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
   bracket_x <- 0.28
   bracket_arm <- 0.10
   check_x <- bracket_x + 0.03
+
+  # palette
+  group_palette <- build_tile_palette(groups_plot$group_id, seed = 1)
 
   # y positions
   taxa_levels <- c(
@@ -57,10 +68,7 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
 
   # axis label data
   y_breaks <- y_map |>
-    dplyr::left_join(
-      count_species_copies(RADq),
-      by = "taxa"
-    ) |>
+    dplyr::left_join(copy_counts, by = "taxa") |>
     dplyr::mutate(n_copies = tidyr::replace_na(n_copies, 0))
 
   # grouped taxon brackets
@@ -93,7 +101,7 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
   p_msa <- p_msa +
     ggplot2::geom_text(
       data = header_rows,
-      ggplot2::aes(x = vx, y = y_header + 0.25, label = vregion),
+      ggplot2::aes(x = vx, y = y_header + 0.6, label = vregion),
       inherit.aes = FALSE,
       color = "black",
       size = 2.8
@@ -113,7 +121,8 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
       height = 1,
       color = "black",
       linewidth = 0.35
-    )
+    ) +
+    ggplot2::scale_fill_manual(values = group_palette)
 
   # grouped taxon brackets
   p_msa <- add_group_brackets(
@@ -153,7 +162,11 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     ) +
     ggplot2::scale_y_continuous(
       breaks = y_breaks$y,
-      labels = make_species_axis_labels(y_breaks$taxa, y_breaks$n_copies),
+      labels = make_species_axis_labels(
+        y_breaks$taxa,
+        y_breaks$n_copies,
+        searched_taxa = searched_taxa
+      ),
       limits = c(max(groups_plot$y) + 0.8, min(header_rows$y_header) - 0.2),
       expand = c(0, 0),
       trans = "reverse"
@@ -168,14 +181,10 @@ build_nondetailed_plot <- function(unique, groups_info, RADq, selected_regions_c
     ggplot2::labs(x = NULL, y = NULL)
 
   # plot height
-  # plot height
   n_taxa <- nrow(y_map)
-  plot_height <- min(
-    1400,
-    max(
-      200,
-      110 + 60 * n_taxa
-    )
+  plot_height <- max(
+    200,
+    110 + 60 * n_taxa
   )
 
   # return plot and height

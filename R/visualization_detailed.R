@@ -1,6 +1,13 @@
 # helper for detailed RADexplorer plot
 
-build_detailed_plot <- function(layout_data, vr_levels_all, unique, selected_vr, vregionIDs = FALSE) {
+build_detailed_plot <- function(
+    layout_data,
+    vr_levels_all,
+    unique,
+    selected_vr,
+    vregionIDs = FALSE,
+    searched_taxa = character(0)
+) {
 
   # plotting inputs
   species_layout <- layout_data$species_layout
@@ -21,7 +28,7 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, selected_vr,
   check_x <- bracket_x + 0.03
 
   # tile colors
-  tile_palette <- build_tile_palette(RADqtiles$seq_id)
+  tile_palette <- build_tile_palette(RADqtiles$seq_id_local)
 
   # backbone rows
   detailed_backbone_df <- copy_layout |>
@@ -135,12 +142,16 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, selected_vr,
       breaks = seq_len(n_vr),
       labels = NULL,
       position = "top",
-      limits = c(0.3 - backbone_pad, n_vr + 1.2 + backbone_pad),
+      limits = c(-0.45, n_vr + 1.2 + backbone_pad),
       expand = c(0, 0)
     ) +
     ggplot2::scale_y_continuous(
       breaks = y_breaks$y_lab,
-      labels = make_species_axis_labels(y_breaks$species, y_breaks$n_copies),
+      labels = make_species_axis_labels(
+        y_breaks$species,
+        y_breaks$n_copies,
+        searched_taxa = searched_taxa
+      ),
       limits = c(max(detailed_backbone_df$y) + 0.5, min(header_rows$y_header) - 0.6),
       expand = c(0, 0),
       trans = "reverse"
@@ -149,18 +160,17 @@ build_detailed_plot <- function(layout_data, vr_levels_all, unique, selected_vr,
     ggplot2::theme_minimal() +
     ggplot2::theme(
       legend.position = "none",
-      axis.text.y = ggtext::element_markdown(margin = ggplot2::margin(r = 18)),
+      axis.text.y = ggtext::element_markdown(margin = ggplot2::margin(r = 50)),
       strip.text = ggplot2::element_text(size = 12)
     )
 
   # plot height
-  n_rows <- nrow(detailed_backbone_df)
-  plot_height <- min(
-    1400,
-    max(
-      150,
-      110 + 25 * n_rows
-    )
+  n_species <- dplyr::n_distinct(species_layout$species)
+  total_copy_rows <- nrow(detailed_backbone_df)
+
+  plot_height <- max(
+    220,
+    120 + 28 * total_copy_rows + 12 * n_species
   )
 
   # return plot and height
