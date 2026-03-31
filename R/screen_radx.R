@@ -2,127 +2,135 @@ radx_screen_ui <- function() {
   # rad explorer menu
   bslib::page_sidebar(
     sidebar = bslib::sidebar(
-      shiny::h5("Options"),
+      # header
+      shiny::div(
+        style = "display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;",
+        shiny::h5("Options", style = "margin:0;"),
+        shiny::actionButton("backToMenu", "Back")
+      ),
+
       # variable region select
-      shiny::checkboxGroupInput(
-        "varRegions",
-        "Select v-regions:",
-        choices = paste0("V", 1:9),
-        selected = c("V4")
+      shiny::div(
+        class = "vr-grid",
+        shiny::checkboxGroupInput(
+          "varRegions", "Select v-regions:",
+          choices = paste0("V", 1:9), selected = "V4"
+        )
       ),
       shiny::div(
-        style = "margin-top:-16px; margin-bottom:8px; font-size:12px;",
+        style = "margin:-16px 0 8px;font-size:12px;",
         shiny::actionLink("deselectVarRegions", "Deselect all v-regions")
       ),
-      bslib::input_switch(
-        "detailedView",
-        label = "Detailed View",
-        value = TRUE
+
+      # display options
+      bslib::input_switch("detailedView", "Detailed View", TRUE),
+      bslib::input_switch("vregionIDs", "V-Region Labels", FALSE),
+
+      # taxa search
+      shinyWidgets::pickerInput(
+        "radxSearchTaxa", "Search:",
+        choices = NULL, multiple = TRUE, width = "100%",
+        options = shinyWidgets::pickerOptions(
+          `live-search` = TRUE,
+          `live-search-style` = "contains",
+          `actions-box` = TRUE,
+          `selected-text-format` = "count > 8",
+          `live-search-placeholder` = "Type to search",
+          `none-selected-text` = "Type to search",
+          size = 10,
+          `dropup-auto` = FALSE,
+          container = "body"
+        )
       ),
-      bslib::input_switch(
-        "vregionIDs",
-        label = "Display V-Region Labels",
-        value = FALSE
-      ),
-      shiny::div(
-        style = "display:flex; gap:10px; width:100%;",
-        shiny::actionButton("backToMenu", "Back", style = "flex:1;")
-      )
+      shiny::actionButton("searchTaxa", "Search", style = "width:100%;margin-bottom:10px;")
     ),
-    tags$style(HTML("
-      .radx-visual-wrap {
-        position: relative;
-        min-height: 650px;
-      }
 
-      .radx-visual-output {
-        transition: opacity 0.15s ease;
-      }
+    # app styles
+    radx_styles(),
 
-      .radx-visual-loader {
-        display: none;
-        position: absolute;
-        inset: 0;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 16px;
-        background: rgba(255, 255, 255, 0.9);
-        z-index: 10;
-        text-align: center;
-      }
+    # instructions
+    radx_instructions(),
 
-      .radx-visual-wrap:has(.radx-visual-output .recalculating) .radx-visual-loader {
-        display: flex;
-      }
+    # main plot
+    shiny::conditionalPanel(
+      "input.continueWithTaxa > 0",
+      radx_loading_plot("visual")
+    )
 
-      .radx-visual-wrap:has(.radx-visual-output .recalculating) .radx-visual-output {
-        opacity: 0;
-      }
+  )
+}
 
-      .radx-spinner {
-        width: 48px;
-        height: 48px;
-        border: 5px solid #d9d9d9;
-        border-top: 5px solid #2c7c31;
-        border-radius: 50%;
-        animation: radx-spin 0.8s linear infinite;
-      }
+radx_loading_plot <- function(id, height = "550px") {
+  # plot output with loading overlay
+  shiny::div(
+    class = "radx-wrap",
+    shiny::div(class = "radx-out", plotly::plotlyOutput(id, height = height)),
+    shiny::div(
+      class = "radx-load",
+      shiny::div(class = "radx-spin"),
+      shiny::div(class = "radx-text", "Loading visualization...")
+    )
+  )
+}
 
-      @keyframes radx-spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-
-      .radx-loader-text {
-        font-size: 15px;
-        color: #444;
-      }
-    ")),
-    bslib::accordion(
-      id = "radx_instructions",
-      open = TRUE,
-      bslib::accordion_panel(
-        "RADx Instructions",
-        p(
-          "Select the 16S rRNA gene variable regions you wish to study in the left sidebar.",
-          tags$br(),
-          "A green checkmark (",
-          span("✓", style = "color: green; font-weight: bold;"),
-          ") indicates that a taxon can be identified using the selected v-region(s). ",
-          tags$br(),
-          "A red bracket (",
-          span("[", style = "color: red; font-weight: bold;"),
-          ") groups taxa that cannot be distinguished from one another with the selected v-region(s). ",
-          tags$small(
-            style = "display:block; font-style:italic; margin-top:8px; margin-bottom:12px;",
-            "Note: Colors designate identical sequences within a v-region. Colors should not be compared across columns."
-          )
+radx_instructions <- function() {
+  # radx instructions accordion
+  bslib::accordion(
+    id = "radx_instructions",
+    open = TRUE,
+    class = "radx-accordion",
+    bslib::accordion_panel(
+      "RADx Instructions",
+      shiny::p(
+        class = "radx-instructions-text",
+        "Select the 16S rRNA gene variable regions you wish to study in the left sidebar.",
+        shiny::tags$br(),
+        "A green checkmark (", shiny::span("✓", style = "color:green;font-weight:bold;"),
+        ") indicates that a taxon can be identified using the selected v-region(s).",
+        shiny::tags$br(),
+        "A red bracket (", shiny::span("[", style = "color:red;font-weight:bold;"),
+        ") groups taxa that cannot be distinguished from one another with the selected v-region(s).",
+        shiny::tags$small(
+          style = "display:block;font-style:italic;margin-top:6px;",
+          "Note: Colors designate identical sequences within a v-region. Colors should not be compared across columns."
         )
       )
-    ),
-    bslib::card(
-      shiny::conditionalPanel(
-        "input.continueWithTaxa > 0",
-        radx_loading_plot("visual", height = "650px")
-      )
     )
   )
 }
 
-radx_loading_plot <- function(id, height = "650px") {
-  shiny::div(
-    class = "radx-visual-wrap",
-    shiny::div(
-      class = "radx-visual-output",
-      plotly::plotlyOutput(id, height = height)
-    ),
-    shiny::div(
-      class = "radx-visual-loader",
-      shiny::div(class = "radx-spinner"),
-      shiny::div(class = "radx-loader-text", "Loading visualization...")
-    )
-  )
+radx_styles <- function() {
+  # shared styles
+  shiny::tags$style(shiny::HTML("
+    .vr-grid .shiny-options-group{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 12px}
+    .vr-grid .checkbox{margin:0}
+    .radx-wrap{position:relative;min-height:550px}
+    .radx-out{transition:opacity .15s ease}
+    .radx-load{
+      display:none;position:absolute;inset:0;z-index:10;
+      background:rgba(255,255,255,.9);
+      align-items:center;justify-content:center;flex-direction:column;
+      gap:16px;text-align:center
+    }
+    .radx-wrap:has(.radx-out .recalculating) .radx-load{display:flex}
+    .radx-wrap:has(.radx-out .recalculating) .radx-out{opacity:0}
+    .radx-spin{
+      width:48px;height:48px;border-radius:50%;
+      border:5px solid #d9d9d9;border-top-color:#2c7c31;
+      animation:radx-spin .8s linear infinite
+    }
+    .radx-text{font-size:15px;color:#444}
+    @keyframes radx-spin{to{transform:rotate(360deg)}}
+    .radx-accordion .accordion-button{
+      padding:8px 12px;
+      font-size:14px;
+    }
+    .radx-accordion .accordion-body{
+      padding:8px 12px;
+    }
+    .radx-instructions-text{
+      margin:0;
+      line-height:1.3;
+    }
+  "))
 }
-
-
