@@ -96,6 +96,10 @@ radx_instructions <- function() {
         ").",
         shiny::tags$br(),
         shiny::tags$br(),
+        "The detailed plot shows the v-regions in all 16S gene copies, ",
+        "while the normal plot collapses gene copies into a single pattern for each v-region.",
+        shiny::tags$br(),
+        shiny::tags$br(),
         shiny::tags$small(
           style = "display:block;font-style:italic;margin-top:6px;",
           "Note: Colors designate identical sequences within a v-region. Colors should not be compared across columns."
