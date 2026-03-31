@@ -23,7 +23,7 @@ radx_screen_ui <- function() {
       ),
 
       # display options
-      bslib::input_switch("detailedView", "Detailed View", TRUE),
+      bslib::input_switch("detailedView", "Detailed View", FALSE),
       bslib::input_switch("vregionIDs", "V-Region Labels", FALSE),
 
       # taxa search
@@ -74,10 +74,10 @@ radx_instructions <- function() {
   # radx instructions accordion
   bslib::accordion(
     id = "radx_instructions",
-    open = TRUE,
+    open = FALSE,
     class = "radx-accordion",
     bslib::accordion_panel(
-      "RADx Instructions",
+      "Click to open RADx Instructions",
       shiny::p(
         class = "radx-instructions-text",
         "Select the 16S rRNA gene variable regions you wish to study in the left sidebar.",
@@ -89,15 +89,11 @@ radx_instructions <- function() {
         ") groups taxa that cannot be distinguished from one another with the selected v-region(s).",
         shiny::tags$br(),
         shiny::tags$br(),
-        "Use Locate to show the chosen taxa and any taxa they are grouped with.",
+        "Use Locate to focus on chosen taxa and any taxa they are grouped with.",
         shiny::tags$br(),
         "  • Located taxa will be marked with a blue arrow (",
         shiny::span("➤", style = "color:#00dfeb;font-size:14pt;font-weight:bold;"),
         ").",
-        shiny::tags$br(),
-        shiny::tags$br(),
-        "The detailed plot shows the v-regions in all 16S gene copies, ",
-        "while the normal plot collapses gene copies into a single pattern for each v-region.",
         shiny::tags$br(),
         shiny::tags$br(),
         shiny::tags$small(

@@ -1,8 +1,26 @@
 loading_screen_ui <- function() {
-  loading_messages <- c(
+  bslib::page_fillable(
+    div(
+      style = "
+        height:100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        flex-direction:column;
+        gap:16px;
+      ",
+      h3("Loading RADx..."),
+      div(class = "spinner-border", role = "status"),
+      p(sample(get_loading_messages(), 1))
+    )
+  )
+}
+
+get_loading_messages <- function() {
+  c(
     "Parsing FASTA files...",
     "Clustering sequences...",
-    "Mapping regions V1–V9...",
+    "Mapping regions V1-V9...",
     "Grouping identical reads...",
     "Collapsing redundant taxa...",
     "Filtering low-quality reads...",
@@ -18,21 +36,5 @@ loading_screen_ui <- function() {
     "Centrifuging samples...",
     "Extracting DNA...",
     "Frantically coding..."
-  )
-
-  bslib::page_fillable(
-    div(
-      style = "
-        height:100vh;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        flex-direction:column;
-        gap:16px;
-      ",
-      h3("Loading RADx..."),
-      div(class = "spinner-border", role = "status"),
-      p(sample(loading_messages, 1))
-    )
   )
 }

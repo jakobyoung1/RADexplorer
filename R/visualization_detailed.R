@@ -160,7 +160,7 @@ build_detailed_plot <- function(
     ggplot2::theme_minimal() +
     ggplot2::theme(
       legend.position = "none",
-      axis.text.y = ggtext::element_markdown(margin = ggplot2::margin(r = 18)),
+      axis.text.y = ggtext::element_markdown(margin = ggplot2::margin(r = 50)),
       strip.text = ggplot2::element_text(size = 12)
     )
 
