@@ -7,7 +7,7 @@
 #' @param groups Data frame of taxa grouping information.
 #' @param varRegions List of the user-selected variable regions
 #'
-#' @return a list containing the standardized RADq, unique, groups, and RADqtiles, groups_info dfs
+#' @return a list containing the standardized unique, RADqtiles, groups_info, and copy_counts
 #'
 #' @export
 #'
@@ -53,12 +53,17 @@ standardize_plot_inputs <- function(RADq, unique, groups, varRegions) {
       group_label = paste0("Group ", group_num)
     )
 
+  # copy counts per taxa, derived from RADqtiles
+  copy_counts <- RADqtiles |>
+    dplyr::distinct(species, copy_num) |>
+    dplyr::count(species, name = "n_copies") |>
+    dplyr::rename(taxa = species)
+
   list(
-    RADq = RADq,
     unique = unique,
-    groups = groups,
     RADqtiles = RADqtiles,
-    groups_info = groups_info
+    groups_info = groups_info,
+    copy_counts = copy_counts
   )
 }
 
@@ -177,19 +182,13 @@ make_species_axis_labels <- function(species, n_copies, searched_taxa = characte
 
   searched_taxa <- searched_taxa %||% character(0)
 
-  species_label <- ifelse(
-    species %in% searched_taxa,
-    paste0(
-      "<span style='font-size:18pt; color:#00dfeb; font-weight:650; position:relative; top:8px;'>➤  </span>",
-      "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>",
-      species,
-      "</i></span>"
-    ),
-    paste0(
-      "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>",
-      species,
-      "</i></span>"
-    )
+  arrow <- "<span style='font-size:18pt; color:#00dfeb; font-weight:650; position:relative; top:8px;'>\u27A4  </span>"
+
+  species_label <- paste0(
+    ifelse(species %in% searched_taxa, arrow, ""),
+    "<span style='font-size:10pt; line-height:1.1; font-weight:650;'><i>",
+    species,
+    "</i></span>"
   )
 
   paste0(
@@ -290,16 +289,6 @@ build_selected_vr_rects <- function(selected_vr, vr_levels_all, ymin, ymax) {
     )
 }
 
-count_species_copies <- function(RADq) {
-  RADq |>
-    dplyr::distinct(species, copy_id) |>
-    dplyr::group_by(species) |>
-    dplyr::mutate(copy_num = dplyr::dense_rank(copy_id)) |>
-    dplyr::ungroup() |>
-    dplyr::distinct(taxa = species, copy_num) |>
-    dplyr::count(taxa, name = "n_copies")
-}
-
 add_selected_vr_rects <- function(p, selected_vr_rects) {
   if (nrow(selected_vr_rects) == 0) {
     return(p)
@@ -360,7 +349,7 @@ add_unique_taxa_checks <- function(p, unique_taxa_df, x, y_col) {
     ggplot2::geom_text(
       data = unique_taxa_df,
       ggplot2::aes(x = x, y = .data[[y_col]]),
-      label = "✔",
+      label = "\u2714",
       inherit.aes = FALSE,
       color = "green3",
       size = 4

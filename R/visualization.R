@@ -57,8 +57,7 @@ make_msa_plotly <- function(
     build_nondetailed_plot(
       unique = prep$unique,
       groups_info = prep$groups_info,
-      RADq = prep$RADq,
-      selected_regions_clean = varRegions,
+      copy_counts = prep$copy_counts,
       selected_vr = varRegions,
       vr_levels_all = vr_levels_all,
       vregionIDs = vregionIDs,

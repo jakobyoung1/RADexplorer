@@ -3,8 +3,7 @@
 build_nondetailed_plot <- function(
     unique,
     groups_info,
-    RADq,
-    selected_regions_clean,
+    copy_counts,
     selected_vr,
     vr_levels_all,
     vregionIDs = FALSE,
@@ -69,10 +68,7 @@ build_nondetailed_plot <- function(
 
   # axis label data
   y_breaks <- y_map |>
-    dplyr::left_join(
-      count_species_copies(RADq),
-      by = "taxa"
-    ) |>
+    dplyr::left_join(copy_counts, by = "taxa") |>
     dplyr::mutate(n_copies = tidyr::replace_na(n_copies, 0))
 
   # grouped taxon brackets

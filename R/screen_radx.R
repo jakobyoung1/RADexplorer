@@ -88,7 +88,7 @@ radx_instructions <- function() {
         ") groups taxa that cannot be distinguished from one another with the selected v-region(s).",
         shiny::tags$br(),
         shiny::tags$br(),
-        "Use Locate to focus on chosen taxa and any taxa they are grouped with.",
+        "Use Locate to filter for chosen taxa and any taxa they are grouped with.",
         shiny::tags$br(),
         "  • Located taxa will be marked with a blue arrow (",
         shiny::span("➤", style = "color:#00dfeb;font-size:14pt;font-weight:bold;"),

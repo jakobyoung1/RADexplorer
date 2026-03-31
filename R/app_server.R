@@ -167,7 +167,7 @@ app_server <- function(input, output, session) {
         all_taxa = all_taxa_now
       )
     )
-  }, ignoreInit = TRUE)
+  }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
   # update selected variable regions
   shiny::observeEvent(input$varRegions, {
