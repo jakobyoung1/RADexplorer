@@ -99,7 +99,9 @@ radport_screen_ui <- function() {
     "),
     htmltools::tags$script(htmltools::HTML("
       function copyCode(id) {
-        navigator.clipboard.writeText(document.getElementById(id).innerText).then(function() {
+        var code = document.querySelector('#' + id + ' code');
+        var text = code ? code.innerText.trim() : '';
+        navigator.clipboard.writeText(text).then(function() {
           var btns = document.querySelectorAll('.copy-btn');
           btns.forEach(function(b) {
             if (b.getAttribute('data-target') === id) {

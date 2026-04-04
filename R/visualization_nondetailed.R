@@ -21,7 +21,11 @@ build_nondetailed_plot <- function(
       vx = match(vregion, vr_levels_all)
     ) |>
     dplyr::group_by(vregion) |>
-    dplyr::mutate(group_id = match(group, unique(group))) |>
+    dplyr::mutate(group_id = paste0(
+      match(vregion, paste0("V", 1:9)),
+      "-",
+      match(group, unique(group))
+    )) |>
     dplyr::ungroup()
 
   # plotting constants
