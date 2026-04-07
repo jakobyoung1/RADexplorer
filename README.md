@@ -118,8 +118,8 @@ Switch to Detailed View to see every individual gene copy per species. Tiles of 
 Select your taxa and step through each V-region one at a time. The region that gives you the most green checkmarks across your taxa of interest is your best option.
 
 
-**4) "Another researcher used V3 (or V3-V4) amplicon sequencing. Can I compare my V4 data to theirs?"**  
-Select your taxa and check V3 and V4 separately, then together. If the groupings and checkmarks change between the two selections, the two datasets are identifying your community differently and direct comparison may be difficult.
+**4) "Another researcher used V3 amplicon sequencing. Can I compare my V4 data to theirs?"**  
+Select your taxa and check V3 and V4 separately. If the groupings and checkmarks change between the two selections, the two datasets are identifying your community differently and direct comparison may be difficult.
 
 
 **5) "I am writing a methods section and need to justify my V-region choice."**  
