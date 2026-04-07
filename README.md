@@ -107,7 +107,7 @@ Use the **Locate Taxa** picker to search for specific taxa in the plot. Located 
 ## Typical Use Cases
 
 **1) "Can I distinguish two closely related species with V4 alone?"**  
-Select both species, check only V4, and see whether they fall into the same group (red bracket) or are independently identifiable (green checkmark).
+Select both species, check only V4, and see whether they fall into the same group (red bracket) or are identifiable (green checkmark).
 
 
 **2) "How many 16S copies does my target organism carry, and are they identical?"**  
@@ -123,11 +123,11 @@ Select your taxa and check V3 and V4 separately. If the groupings and checkmarks
 
 
 **5) "I am writing a methods section and need to justify my V-region choice."**  
-Select your taxa and check your chosen region. RADexplorer shows you exactly why that region resolves your targets. Feel free to cite RADexplorer as justification for your primer selection.
+Select your taxa and check your chosen region. RADexplorer shows you exactly why that region identifies your specific targets. Feel free to cite RADexplorer as justification for your primer selection.
 
 
 **6) "I think two (or more) species in my data are collapsing into one OTU. Can I confirm that?"**  
-Select your species of interest and your sequenced region. A red bracket means they share identical sequences there and cannot be told apart by that amplicon.
+Select your species of interest and your sequenced region. A red bracket means they cannot be told apart by that amplicon and are therefore collapsing into one OTU.
 
 
 ---
