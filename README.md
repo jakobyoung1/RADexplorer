@@ -133,7 +133,7 @@ Select your species of interest and your sequenced region. A red bracket means t
 
 ## RADport
 
-RADx includes **RADport**, a built-in pipeline guide that walks you through running your selected taxa through MetaScope. Access it from the main menu after selecting your species.
+RADx includes **RADport**, a built-in guide that walks you through running your selected taxa through the MetaScope pipeline. Access it from the main menu after selecting your species.
 
 ---
 
