@@ -1,34 +1,34 @@
-# RADexplorer
+# RADexplorer (RADx)
 
 An interactive Shiny app for exploring 16S rRNA gene copy variation across microbial taxa, helping researchers choose the right variable regions for their amplicon sequencing experiments.
 
 ---
 
-## What is RADexplorer?
+## What is RADx?
 
 Bacterial species carry multiple copies of the 16S rRNA gene (~5 on average, up to 15+), and those copies are often not identical. 
 When planning an amplicon sequencing experiment, the variable region (v-region) you choose to sequence determines whether you can actually distinguish the species you care about from closely related taxa.
 
-RADexplorer lets you select any set of species and immediately visualize how their 16S rRNA gene copies differ across all nine variable regions. 
+RADx (**R**egional **A**lignment **D**atabase explorer) lets you select any set of species and immediately visualize how their 16S rRNA gene copies differ across all nine variable regions. 
 You can easily see which v-regions (V1-V9) produce unique sequences for your target taxa, which ones leave species indistinguishable from one another, and whether a single region is enough for your experimental needs.
 
 This matters more than most researchers expect. The most commonly used v-regions in amplicon sequencing, V3 and V4, are frequently insufficient to differentiate between closely related organisms within the same genus or species group.
 
 ### How it works
 
-RADexplorer is built on two reference libraries:
+RADx is built on two reference libraries:
 
 - **RADlib** — a library of all 16S rRNA gene copies associated with each microbial taxon, sourced from NCBI
 - **RADlibv** — RADlib cut into the nine standard variable regions
 
-When you select species in RADexplorer, **RADalign** runs multiple sequence alignment and grouping analyses on those sequences across whichever variable regions you choose. 
-RADexplorer then visualizes the results so you can interpret them interactively.
+When you select species in RADx, **RADalign** runs multiple sequence alignment and grouping analyses on those sequences across whichever variable regions you choose. 
+RADx then visualizes the results so you can interpret them interactively.
 
 ---
 
 ## Installation
 
-RADexplorer is installed directly from GitHub. All dependencies are handled automatically.
+RADx is installed directly from GitHub. All dependencies are handled automatically.
 
 **Step 1: Install pak** (if not already installed)
 ```r
@@ -40,7 +40,7 @@ install.packages("pak")
 pak::pak("RADSuite/RADalign")
 ```
 
-**Step 3: Install RADexplorer**
+**Step 3: Install RADx**
 ```r
 pak::pak("RADSuite/RADexplorer")
 ```
@@ -56,8 +56,7 @@ RADexplorer::run_app()
 ## How to Use
 
 ### 1. Select your species
-
-When the app opens you will see the RADexplorer menu. Use the species picker to search for and select the taxa you want to analyze. You can select as many species as you need. Keep in mind, the more species you select, the longer it will take to load the explorer.
+When the app opens you will see the RADx menu. Use the species picker to search for and select the taxa you want to analyze. You can select as many species as you need. Keep in mind, the more species you select, the longer it will take to load the explorer.
 
 <img width="1160" height="577" alt="taxaSelect" src="https://github.com/user-attachments/assets/e4473cba-d645-46ff-aa30-7d068d986f9e" />
 
@@ -123,7 +122,7 @@ Select your taxa and check V3 and V4 separately. If the groupings and checkmarks
 
 
 **5) "I am writing a methods section and need to justify the variable region I chose to sequence."**  
-Select your taxa and check your chosen region. RADexplorer shows you exactly why that region identifies your specific targets. Feel free to cite RADexplorer as justification for your primer selection.
+Select your taxa and check your chosen region. RADx shows you exactly why that region identifies your specific targets. Feel free to cite RADx as justification for your primer selection.
 
 
 **6) "I think two (or more) species in my data are collapsing into one OTU. Can I confirm that?"**  
@@ -134,13 +133,13 @@ Select your species of interest and your sequenced region. A red bracket means t
 
 ## RADport
 
-RADexplorer includes **RADport**, a built-in pipeline guide that walks you through running your selected taxa through MetaScope for read-level taxonomic classification. Access it from the main menu after selecting your species.
+RADx includes **RADport**, a built-in pipeline guide that walks you through running your selected taxa through MetaScope for read-level taxonomic classification. Access it from the main menu after selecting your species.
 
 ---
 
 ## Dependencies
 
-RADexplorer requires R >= 4.1. Core dependencies include:
+RADx requires R >= 4.1. Core dependencies include:
 
 - `shiny`, `bslib`, `shinyjs`, `shinyWidgets`
 - `ggplot2`, `ggtext`, `plotly`
@@ -154,7 +153,7 @@ All dependencies are installed automatically via `pak::pak("RADSuite/RADexplorer
 
 ## Citation
 
-If you use RADexplorer in your work, please cite the RADSuite package suite (citation tbd).
+If you use RADx in your work, please cite the RADSuite package suite (citation tbd).
 
 ---
 
