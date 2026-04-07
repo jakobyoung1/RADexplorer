@@ -114,7 +114,7 @@ Select both species, check only V4, and see whether they fall into the same grou
 Switch to Detailed View to see every individual gene copy per species. Tiles of different colors in the same column indicate unique sequences for that region.
 
 
-**3) "My budget only allows for sequencing one v-region. Which should I choose?"**   
+**3) "My budget only allows for sequencing one variable region. Which should I choose?"**   
 Select your taxa and step through each V-region one at a time. The region that gives you the most green checkmarks across your taxa of interest is your best option.
 
 
