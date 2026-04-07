@@ -97,7 +97,7 @@ Toggle **V-Region Labels** to display sequence ID labels directly on each tile f
 
 Use the **Locate Taxa** picker to search for specific taxa in the plot. Located taxa will be marked with a blue arrow on the y axis and the plot will be filtered to include only the taxa they are are grouped with under the current v-region selection.
 
-<img width="1136" height="604" alt="locateTaxa" src="https://github.com/user-attachments/assets/67f076d6-0dba-4cec-92b4-334258935d07" />
+<img width="1136" height="460" alt="locateTaxa" src="https://github.com/user-attachments/assets/1d57ed6d-e862-49ff-8f83-97edec6fe4fd" />
 
 
 ---
