@@ -104,16 +104,16 @@ Use the **Locate Taxa** picker to search for specific taxa in the plot. Located 
 
 ## Typical Use Cases
 
-**1) "My sequencing budget only allows for sequencing one v-region. Which should I choose?"**   
-Select your taxa or community of interest, try different V-region combinations, and look for green checkmarks. A checkmark means that region produces a unique sequence for that species and you can uniquely identify it!
-
-
-**2) "Can I distinguish two closely related species with V4 alone?"**  
+**1) "Can I distinguish two closely related species with V4 alone?"**  
 Select both species, check only V4, and see whether they fall into the same group (red bracket) or are independently identifiable (green checkmark).
 
 
-**3) "How many 16S copies does my target organism carry, and are they identical?"**  
+**2) "How many 16S copies does my target organism carry, and are they identical?"**  
 Switch to Detailed View to see every individual gene copy per species. Tiles of different colors in the same column indicate unique sequences for that region.
+
+
+**3) "My sequencing budget only allows for sequencing one v-region. Which should I choose?"**   
+Select your taxa and step through each V-region one at a time. The region that gives you the most green checkmarks across your taxa of interest is your best option.
 
 
 **4) "Another researcher used V3-V4 amplicon sequencing. Can I compare my V4 data to theirs?"**  
