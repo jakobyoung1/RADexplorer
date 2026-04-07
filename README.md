@@ -28,7 +28,8 @@ RADx then visualizes the results so you can interpret them interactively.
 
 ## Installation
 
-RADx is installed directly from GitHub. All dependencies are handled automatically.
+RADx is installed directly from GitHub. All dependencies are handled automatically.  
+Run the following commands in your R or RStudio console:
 
 **Step 1: Install pak** (if not already installed)
 ```r
