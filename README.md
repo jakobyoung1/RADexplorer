@@ -58,7 +58,7 @@ RADexplorer::run_app()
 ### 1. Select your species
 When the app opens you will see the RADx menu. Use the species picker to search for and select the taxa you want to analyze. You can select as many species as you need. Keep in mind, the more species you select, the longer it will take to load the explorer. To select all species within a genus, use the "All Species (#)" options. 
 
-<img width="1181" height="581" alt="taxaSelect" src="https://github.com/user-attachments/assets/a9ea6849-e2b6-4832-becb-f2641b3a836d" />
+<img width="1181" height="581" alt="taxaSelect" src="https://github.com/user-attachments/assets/53e91509-f637-492c-aa36-edc21868b5c1" />
 
 
 ### 2. Choose your variable regions
