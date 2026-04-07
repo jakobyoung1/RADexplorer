@@ -1,3 +1,7 @@
+#' Build the RADexplorer loading screen UI
+#'
+#' @return A bslib page_fillable UI object containing a centered loading
+#'   spinner and a randomly selected loading message.
 loading_screen_ui <- function() {
   bslib::page_fillable(
     div(
@@ -16,6 +20,9 @@ loading_screen_ui <- function() {
   )
 }
 
+#' Get loading screen messages
+#'
+#' @return A character vector of loading messages.
 get_loading_messages <- function() {
   c(
     "Parsing FASTA files...",

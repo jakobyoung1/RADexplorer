@@ -1,5 +1,3 @@
-# helper functions for RADexplorer plotting
-
 #' Standardize plot inputs for RADexplorer visualizations
 #'
 #' @param RADq Data frame of RADq results.

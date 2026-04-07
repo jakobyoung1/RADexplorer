@@ -1,5 +1,14 @@
-# helper for non-detailed RADexplorer plot
-
+#' Build the non-detailed RADexplorer MSA plot
+#'
+#' @param unique Data frame of summarized unique IDs.
+#' @param groups_info Data frame of taxa grouping information from standardize_plot_inputs.
+#' @param copy_counts Data frame of copy counts per taxa from standardize_plot_inputs.
+#' @param selected_vr Character vector of user-selected variable regions to highlight.
+#' @param vr_levels_all Character vector of all nine variable regions.
+#' @param vregionIDs Logical -- whether to display variable-region IDs on tiles.
+#' @param searched_taxa Character vector of taxa to highlight with an arrow on the y axis.
+#'
+#' @return A list containing the ggplot object and the recommended plot height in pixels.
 build_nondetailed_plot <- function(
     unique,
     groups_info,

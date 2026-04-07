@@ -1,3 +1,10 @@
+#' Build the RADport to MetaScope screen UI
+#'
+#' @param genus Character vector of genus names for the filter dropdown.
+#' @param species Character vector of species names for the filter dropdown.
+#'
+#' @return A bslib page_fillable UI object containing the RADport download
+#'   controls and optional MetaScope filter selection.
 metascope_screen_ui <- function(genus, species) {
   # Metascope download menu
   bslib::page_fillable(

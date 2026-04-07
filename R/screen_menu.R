@@ -1,3 +1,6 @@
+#' Build the RADexplorer menu screen UI
+#'
+#' @return A bslib page_fillable UI object containing the taxa selection menu.
 menu_screen_ui <- function() {
   # rad explorer menu
   bslib::page_fillable(
@@ -85,6 +88,9 @@ menu_screen_ui <- function() {
   )
 }
 
+#' Build shared CSS styles for the menu screen
+#'
+#' @return A shiny tags$style object containing CSS for the menu UI components.
 menu_styles <- function() {
   # shared styles
   shiny::tags$style(shiny::HTML("

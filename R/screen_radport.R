@@ -1,79 +1,7 @@
-CODE_1 <- function() {
-  'library("MetaScope")'
-}
-
-CODE_2A <- function() {
-  'rad_lib_file <- system.file("extdata", "RADlib16S.fa", package = "RADalign")
-dir.create("refdata")
-file.copy(rad_lib_file, "refdata")
-ref <- "refdata"'
-}
-
-CODE_2B <- function() {
-  'ref <- "your/RADdownload/file/path/here"'
-}
-
-CODE_3 <- function() {
-  'data <- "path/to/your/file/data_file.fastq"'
-}
-
-CODE_4 <- function() {
-  'indices <- tempfile()
-dir.create(indices)
-dir.create("out")'
-}
-
-CODE_5 <- function() {
-  'mk_bowtie_index(
-  ref_dir = ref,
-  lib_dir = indices,
-  lib_name = "target",
-  overwrite = TRUE)'
-}
-
-CODE_6 <- function() {
-  'target_map <- align_target_bowtie(
-  data,
-  lib_dir = indices,
-  libs = "target",
-  align_dir = "out",
-  align_file = "bowtie_target",
-  overwrite = TRUE)'
-}
-
-CODE_7 <- function() {
-  'bamFile <- Rsamtools::BamFile(target_map)
-param <- Rsamtools::ScanBamParam(
-  flag = Rsamtools::scanBamFlag(isSecondaryAlignment = FALSE),
-  what = c("flag", "rname")
-)
-aln <- Rsamtools::scanBam(bamFile, param = param)
-accession_all <- aln[[1]]$rname
-genome_name_all <- get_species_list(accession_all)
-read_count_table <- sort(table(genome_name_all), decreasing = TRUE)
-knitr::kable(
-  read_count_table[1:10],
-  col.names = c("Genome Assigned", "Read Count"))'
-}
-
-code_block <- function(id, code) {
-  htmltools::div(style = "position:relative;",
-                 htmltools::tags$button("Copy", class = "copy-btn", `data-target` = id, onclick = paste0("copyCode('", id, "')")),
-                 htmltools::tags$pre(id = id, class = "code-block",
-                                     htmltools::tags$code(htmltools::HTML(paste0("\n", code)))
-                 )
-  )
-}
-
-step_section <- function(n, title, desc, ...) {
-  htmltools::div(class = "step-section",
-                 htmltools::div(class = "step-label", paste("Step", n)),
-                 htmltools::h5(class = "step-title", title),
-                 htmltools::p(class = "step-desc", desc),
-                 ...
-  )
-}
-
+#' Build the RADport pipeline instructions screen UI
+#'
+#' @return A bslib page_fillable UI object containing the step-by-step
+#'   RADport pipeline instructions with copyable code blocks.
 radport_screen_ui <- function() {
   bslib::page_fillable(
     title = "RADport",
@@ -190,4 +118,97 @@ radport_screen_ui <- function() {
                                   "All done! Your read count table is ready. Return to the menu or explore your results further.")
     )
   )
+}
+
+#' Build a copyable code block for the RADport instructions page
+#'
+#' @param id Character string; the HTML element ID for the code block.
+#' @param code Character string; the code to display in the block.
+#'
+#' @return An htmltools div containing the code block and copy button.
+code_block <- function(id, code) {
+  htmltools::div(style = "position:relative;",
+                 htmltools::tags$button("Copy", class = "copy-btn", `data-target` = id, onclick = paste0("copyCode('", id, "')")),
+                 htmltools::tags$pre(id = id, class = "code-block",
+                                     htmltools::tags$code(htmltools::HTML(paste0("\n", code)))
+                 )
+  )
+}
+
+#' Build a numbered step section for the RADport instructions page
+#'
+#' @param n Integer; the step number.
+#' @param title Character string; the step title.
+#' @param desc Character string; the step description.
+#' @param ... Additional UI elements to include in the step section.
+#'
+#' @return An htmltools div containing the formatted step section.
+step_section <- function(n, title, desc, ...) {
+  htmltools::div(class = "step-section",
+                 htmltools::div(class = "step-label", paste("Step", n)),
+                 htmltools::h5(class = "step-title", title),
+                 htmltools::p(class = "step-desc", desc),
+                 ...
+  )
+}
+
+
+# RADport pipeline code strings
+# each function returns a character string of R code for a step in the pipeline
+CODE_1 <- function() {
+  'library("MetaScope")'
+}
+
+CODE_2A <- function() {
+  'rad_lib_file <- system.file("extdata", "RADlib16S.fa", package = "RADalign")
+dir.create("refdata")
+file.copy(rad_lib_file, "refdata")
+ref <- "refdata"'
+}
+
+CODE_2B <- function() {
+  'ref <- "your/RADdownload/file/path/here"'
+}
+
+CODE_3 <- function() {
+  'data <- "path/to/your/file/data_file.fastq"'
+}
+
+CODE_4 <- function() {
+  'indices <- tempfile()
+dir.create(indices)
+dir.create("out")'
+}
+
+CODE_5 <- function() {
+  'mk_bowtie_index(
+  ref_dir = ref,
+  lib_dir = indices,
+  lib_name = "target",
+  overwrite = TRUE)'
+}
+
+CODE_6 <- function() {
+  'target_map <- align_target_bowtie(
+  data,
+  lib_dir = indices,
+  libs = "target",
+  align_dir = "out",
+  align_file = "bowtie_target",
+  overwrite = TRUE)'
+}
+
+CODE_7 <- function() {
+  'bamFile <- Rsamtools::BamFile(target_map)
+param <- Rsamtools::ScanBamParam(
+  flag = Rsamtools::scanBamFlag(isSecondaryAlignment = FALSE),
+  what = c("flag", "rname")
+)
+aln <- Rsamtools::scanBam(bamFile, param = param)
+accession_all <- aln[[1]]$rname
+genome_name_all <- get_species_list(accession_all)
+read_count_table <- sort(table(genome_name_all), decreasing = TRUE)
+knitr::kable(
+  read_count_table[1:10],
+  col.names = c("Genome Assigned", "Read Count"))'
 }

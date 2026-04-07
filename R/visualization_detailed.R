@@ -1,5 +1,15 @@
-# helper for detailed RADexplorer plot
-
+#' Build the detailed RADexplorer MSA plot
+#'
+#' @param layout_data A list output from build_species_layout containing
+#'   species_layout, copy_layout, y_breaks, group_bracket_df, unique_taxa_df,
+#'   and RADqtiles.
+#' @param vr_levels_all Character vector of all nine variable regions.
+#' @param unique Data frame of summarized unique IDs.
+#' @param selected_vr Character vector of user-selected variable regions to highlight.
+#' @param vregionIDs Logical -- whether to display variable-region IDs on tiles.
+#' @param searched_taxa Character vector of taxa to highlight with an arrow on the y axis.
+#'
+#' @return A list containing the ggplot object and the recommended plot height in pixels.
 build_detailed_plot <- function(
     layout_data,
     vr_levels_all,

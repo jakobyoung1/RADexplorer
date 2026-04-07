@@ -1,3 +1,6 @@
+#' Build the main RADexplorer screen UI
+#'
+#' @return A bslib page_sidebar UI object containing the sidebar controls and main plot area.
 radx_screen_ui <- function() {
   # rad explorer menu
   bslib::page_sidebar(
@@ -56,6 +59,12 @@ radx_screen_ui <- function() {
   )
 }
 
+#' Build a plotly output with a loading overlay
+#'
+#' @param id Character string; the output ID for the plotly plot.
+#' @param height Character string; the CSS height of the plot, default "570px".
+#'
+#' @return A div containing the plot output and loading spinner overlay.
 radx_loading_plot <- function(id, height = "570px") {
   # plot output with loading overlay
   shiny::div(
@@ -69,6 +78,9 @@ radx_loading_plot <- function(id, height = "570px") {
   )
 }
 
+#' Build the RADx instructions accordion panel
+#'
+#' @return A bslib accordion UI object containing usage instructions.
 radx_instructions <- function() {
   # radx instructions accordion
   bslib::accordion(
@@ -104,6 +116,9 @@ radx_instructions <- function() {
   )
 }
 
+#' Build shared CSS styles for the RADx screen
+#'
+#' @return A shiny tags$style object containing CSS for the RADx UI components.
 radx_styles <- function() {
   # shared styles
   shiny::tags$style(shiny::HTML("
