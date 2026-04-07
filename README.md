@@ -122,7 +122,7 @@ Select your taxa and step through each V-region one at a time. The region that g
 Select your taxa and check V3 and V4 separately. If the groupings and checkmarks change between the two selections, the two datasets are identifying your community differently and direct comparison may be difficult.
 
 
-**5) "I am writing a methods section and need to justify my V-region choice."**  
+**5) "I am writing a methods section and need to justify the variable region I chose to sequence."**  
 Select your taxa and check your chosen region. RADexplorer shows you exactly why that region identifies your specific targets. Feel free to cite RADexplorer as justification for your primer selection.
 
 
