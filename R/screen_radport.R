@@ -4,7 +4,7 @@
 #'   RADport pipeline instructions with copyable code blocks.
 radport_screen_ui <- function() {
   bslib::page_fillable(
-    title = "RADport",
+    title = "Metascope Integration and Instructions",
     htmltools::tags$style("
       .radport-wrap { max-width:820px; margin:0 auto; padding:48px 24px 100px 24px; }
       .step-label { font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#888; }
@@ -96,7 +96,7 @@ radport_screen_ui <- function() {
 
                    htmltools::hr(class = "divider"),
 
-                   step_section(5, "Build Bowtie Index", "Index the reference database so Bowtie can align against it.",
+                   step_section(5, "Build Bowtie Index", "Index the reference database so Bowtie can align against it. Note: this step can take a long time, but only needs to be run once.",
                                 code_block("code5", CODE_5())
                    ),
 
