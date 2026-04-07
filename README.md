@@ -18,8 +18,8 @@ This matters more than most researchers expect. The most commonly used v-regions
 
 RADx is built on two reference libraries:
 
-- **RADlib** — a library of all 16S rRNA gene copies associated with each microbial taxon, sourced from NCBI
-- **RADlibv** — RADlib cut into the nine standard variable regions
+- **RADlib** - 
+- **RADlibv** -
 
 When you select species in RADx, **RADalign** runs multiple sequence alignment and grouping analyses on those sequences across whichever variable regions you choose. 
 RADx then visualizes the results so you can interpret them interactively.
@@ -133,7 +133,7 @@ Select your species of interest and your sequenced region. A red bracket means t
 
 ## RADport
 
-RADx includes **RADport**, a built-in pipeline guide that walks you through running your selected taxa through MetaScope for read-level taxonomic classification. Access it from the main menu after selecting your species.
+RADx includes **RADport**, a built-in pipeline guide that walks you through running your selected taxa through MetaScope. Access it from the main menu after selecting your species.
 
 ---
 
