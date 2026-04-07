@@ -12,6 +12,8 @@ When planning an amplicon sequencing experiment, the variable region (V1-V9) you
 RADexplorer lets you select any set of species and immediately visualize how their 16S rRNA gene copies differ across all nine variable regions. 
 You can easily see which V-regions produce unique sequences for your target taxa, which ones leave species indistinguishable from one another, and whether a single region is sufficient for your experimental needs.
 
+This matters more than most researchers expect. The most commonly used v-regions in amplicon sequencing, V3 and V4, frequently fail to differentiate between closely related organisms within the same genus or species group.
+
 ### How it works
 
 RADexplorer is built on two reference libraries:
